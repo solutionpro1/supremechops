@@ -1,12 +1,12 @@
 import React from 'react';
 import SupremeChopsOrder from './components/SupremeChopsOrder';
-import SupremeChopsAdmin from './components/SupremeChopsAdmin';
+import SupremeAdmin from './components/SupremeAdmin'; // Match your actual file name!
 
 function App() {
-  // Simple check if URL contains '/admin' or path toggle parameters
+  // Check if URL path routes to /admin
   const isAdminView = window.location.pathname === '/admin';
 
-  return isAdminView ? <SupremeChopsAdmin /> : <SupremeChopsOrder />;
+  return isAdminView ? <SupremeAdmin /> : <SupremeChopsOrder />;
 }
 
 export default App;
