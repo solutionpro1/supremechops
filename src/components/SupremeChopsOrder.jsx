@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import emailjs from '@emailjs/browser'; // Integrated email notification library
+﻿import React, { useState, useEffect, useRef } from 'react';
+import emailjs from '@emailjs/browser';
 import HeroSection from './HeroSection';
 import MenuCatalog from './MenuCatalog';
 
@@ -8,26 +8,157 @@ import logoPng from '../assets/logo.png';
 export default function SupremeChopsOrder() {
   const [siteLoading, setSiteLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [activeTab, setActiveTab] = useState('packs'); // Fixed to match your PDF master categories
+  const [activeTab, setActiveTab] = useState('packs');
   const [animatingCart, setAnimatingCart] = useState(false);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   
-  // Comprehensive Professional Customer Input Coordinates
+  // Order Assignment Toggle Layer
+  const [isForSelf, setIsForSelf] = useState(true);
+
+  // Customer Coordinates States
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [altPhone, setAltPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  
+  // Address Autocomplete Search States
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const debounceRef = useRef(null);
 
-  // Business Master Phone Target Number
+  // Delivery Fee Pricing configuration
+  const [deliveryZone, setDeliveryZone] = useState('zone1');
+  const [detectedKm, setDetectedKm] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [invoiceGenerated, setInvoiceGenerated] = useState(false);
+
+  // Obalende Depot Coordinates Base (26 Moshalashi Street, Obalende)
+  const DEPOT_LAT = 6.438384;
+  const DEPOT_LNG = 3.414441;
+
+  const deliveryOptions = {
+    zone1: { label: 'Zone 1: VI, Ikoyi, Lagos Island, Obalende Axis (1-7km)', fee: 1500 },
+    zone2: { label: 'Zone 2: Lekki Phase 1 down to Ikate (8-15km)', fee: 2500 },
+    zone3: { label: 'Zone 3: Extended Lagos Axis / Mainland (>15km)', fee: 5000 }
+  };
+
+  const currentDeliveryFee = deliveryOptions[deliveryZone].fee;
   const WHATSAPP_NUMBER = "2347081241745";
 
   useEffect(() => {
-    // CRUCIAL: Pre-authenticate your Public API key right when the app first renders
     emailjs.init('x9Cbvqg5TNeYJjv_Z'); 
-
     const timer = setTimeout(() => setSiteLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Mathematical straight-line calculation matrix
+  const calculateGpsDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; 
+  };
+
+  // --- REVERSE-GEOCODING LOCATION ENGINE (FOR SELF) ---
+  const handleAutoDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser device profile.");
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        const distance = calculateGpsDistance(DEPOT_LAT, DEPOT_LNG, userLat, userLng);
+        const roundedDistance = Math.round(distance * 10) / 10;
+        setDetectedKm(roundedDistance);
+
+        if (roundedDistance <= 7) {
+          setDeliveryZone('zone1');
+        } else if (roundedDistance > 7 && roundedDistance <= 15) {
+          setDeliveryZone('zone2');
+        } else {
+          setDeliveryZone('zone3');
+        }
+
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}&zoom=18&addressdetails=1`);
+          const data = await response.json();
+          if (data && data.display_name) {
+            const cleanAddress = data.display_name.replace(', Nigeria', '').replace(', West Africa', '');
+            setDeliveryAddress(cleanAddress);
+          }
+        } catch (err) {
+          console.error("Address lookup failed:", err);
+        }
+        
+        setGpsLoading(false);
+      },
+      (error) => {
+        console.error("GPS lock failed:", error);
+        alert("Unable to pinpoint live coordinates. Please type your address manually.");
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 9000 }
+    );
+  };
+
+  // --- LIVE ADDRESS SUGGESTION SEARCH AUTOCOMPLETE ENGINE ---
+  const handleAddressInputChange = (value) => {
+    setDeliveryAddress(value);
+
+    if (!value || value.length < 3 || isForSelf) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const query = encodeURIComponent(`${value}, Lagos`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=ng&addressdetails=1&limit=5`);
+        const data = await response.json();
+        setAddressSuggestions(data || []);
+      } catch (err) {
+        console.error("Autocomplete fetch error:", err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 600);
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    const cleanLabel = suggestion.display_name.replace(', Nigeria', '').replace(', West Africa', '');
+    setDeliveryAddress(cleanLabel);
+    setAddressSuggestions([]);
+
+    if (suggestion.lat && suggestion.lon) {
+      const targetLat = parseFloat(suggestion.lat);
+      const targetLng = parseFloat(suggestion.lon);
+      
+      const distance = calculateGpsDistance(DEPOT_LAT, DEPOT_LNG, targetLat, targetLng);
+      const roundedDistance = Math.round(distance * 10) / 10;
+      setDetectedKm(roundedDistance);
+
+      if (roundedDistance <= 7) {
+        setDeliveryZone('zone1');
+      } else if (roundedDistance > 7 && roundedDistance <= 15) {
+        setDeliveryZone('zone2');
+      } else {
+        setDeliveryZone('zone3');
+      }
+    }
+  };
 
   const handleAddToCartWithAnimation = (item, type, event) => {
     const uniqueId = `${type}-${item.id || item.name.replace(/\s+/g, '-').toLowerCase()}`;
@@ -79,38 +210,39 @@ export default function SupremeChopsOrder() {
     setCart(cart.filter(item => item.uniqueId !== uniqueId));
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
-  // --- COMPREHENSIVE COMBINED INVOICE DISPATCH MACHINE ---
-  const handleCheckoutViaWhatsApp = (e) => {
+  const calculateTotal = () => {
+    return calculateSubtotal() + currentDeliveryFee;
+  };
+
+  // --- IMAGE INVOICE DOWNLOAD & EMAIL PIPELINE ---
+  const handleDownloadInvoice = (e) => {
     e.preventDefault();
     if (cart.length === 0) {
       alert("Your order sheet is completely empty!");
       return;
     }
     if (!customerName || !customerPhone || !deliveryAddress) {
-      alert("Please enter full delivery coordinates before submitting your request.");
+      alert("Please enter full delivery coordinates before generating your document.");
       return;
     }
 
-    // Capture precise local date and time parameters dynamically
     const currentDateTime = new Date();
     const formattedDate = currentDateTime.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
     const formattedTime = currentDateTime.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' });
 
-    // 1. --- GENERATE PHYSICAL JPG INVOICE VIA HTML5 CANVAS ---
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
     canvas.width = 600;
-    canvas.height = 760 + (cart.length * 52); // Fluid bounding size matching item counts dynamically
+    canvas.height = 880 + (cart.length * 52);
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#ea580c'; // Supreme Chops International brand accent orange
+    ctx.fillStyle = '#ea580c'; 
     ctx.fillRect(0, 0, canvas.width, 24);
 
     ctx.fillStyle = '#0a0a0a';
@@ -119,7 +251,7 @@ export default function SupremeChopsOrder() {
     
     ctx.fillStyle = '#6b7280';
     ctx.font = '13px sans-serif';
-    ctx.fillText('Official Order Invoice Receipt', 40, 98);
+    ctx.fillText('Official Order Invoice Receipt (Depot: Obalende)', 40, 98);
 
     ctx.fillStyle = '#171717';
     ctx.font = 'bold 13px sans-serif';
@@ -132,20 +264,20 @@ export default function SupremeChopsOrder() {
 
     ctx.fillStyle = '#ea580c';
     ctx.font = 'bold 12px sans-serif';
-    ctx.fillText('DELIVERY COORDINATES', 40, 155);
+    ctx.fillText('DELIVERY COORDINATES & LOGISTICS PROFILE', 40, 155);
 
     ctx.fillStyle = '#171717';
     ctx.font = '14px sans-serif';
-    ctx.fillText(`👤 Customer Name:  ${customerName}`, 40, 185);
-    ctx.fillText(`📞 Primary Contact:    ${customerPhone}`, 40, 215);
-    ctx.fillText(`☎️ Alternative No:     ${altPhone || 'None Provided'}`, 40, 245);
-    ctx.fillText(`📍 Delivery Address:`, 40, 275);
+    ctx.fillText(`📋 Order Target:     ${isForSelf ? 'For Myself (Self Handover)' : 'For Someone Else (Gift/Recipient Dispatch)'}`, 40, 185);
+    ctx.fillText(`👤 Name Profile:     ${customerName}`, 40, 215);
+    ctx.fillText(`📞 Primary Contact:    ${customerPhone}`, 40, 245);
+    ctx.fillText(`☎️ Alternative No:     ${altPhone || 'None Provided'}`, 40, 275);
+    ctx.fillText(`📍 Delivery Address:`, 40, 305);
     
-    // Address wrapping rules context to cleanly map multi-line addresses
     ctx.fillStyle = '#404040';
     const words = deliveryAddress.split(' ');
     let line = '';
-    let yCoord = 275;
+    let yCoord = 305;
     for (let n = 0; n < words.length; n++) {
       let testLine = line + words[n] + ' ';
       let metrics = ctx.measureText(testLine);
@@ -159,7 +291,16 @@ export default function SupremeChopsOrder() {
     }
     ctx.fillText(line, 180, yCoord);
 
-    yCoord += 40;
+    yCoord += 35;
+    ctx.fillStyle = '#171717';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(`🚚 Axis: ${deliveryOptions[deliveryZone].label}`, 40, yCoord);
+    if (detectedKm) {
+      yCoord += 20;
+      ctx.fillText(`📏 Distance Calculated: ${detectedKm} km from Obalende Hub`, 40, yCoord);
+    }
+
+    yCoord += 30;
     ctx.strokeStyle = '#e5e7eb';
     ctx.beginPath(); ctx.moveTo(40, yCoord); ctx.lineTo(560, yCoord); ctx.stroke();
     
@@ -168,16 +309,12 @@ export default function SupremeChopsOrder() {
     ctx.font = 'bold 12px sans-serif';
     ctx.fillText('ORDER ITEMS MANIFEST', 40, yCoord);
 
-    ctx.fillStyle = '#171717';
-    ctx.font = '13px sans-serif';
     cart.forEach((item) => {
-      yCoord += 42;
+      yCoord += 40;
       ctx.fillStyle = '#171717';
       ctx.font = 'bold 13px sans-serif';
       ctx.fillText(`${item.name} (x${item.quantity})`, 40, yCoord);
-      
       ctx.textAlign = 'right';
-      ctx.font = 'bold 13px sans-serif';
       ctx.fillText(`₦${(item.price * item.quantity).toLocaleString()}`, 560, yCoord);
       ctx.textAlign = 'left';
     });
@@ -188,11 +325,26 @@ export default function SupremeChopsOrder() {
     ctx.beginPath(); ctx.moveTo(40, yCoord); ctx.lineTo(560, yCoord); ctx.stroke();
     ctx.setLineDash([]);
 
-    yCoord += 40;
+    yCoord += 35;
+    ctx.fillStyle = '#525252';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Items Subtotal:', 40, yCoord);
+    ctx.textAlign = 'right';
+    ctx.fillText(`₦${calculateSubtotal().toLocaleString()}`, 560, yCoord);
+    ctx.textAlign = 'left';
+
+    yCoord += 28;
+    ctx.fillStyle = '#525252';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Delivery Fee:', 40, yCoord);
+    ctx.textAlign = 'right';
+    ctx.fillText(`₦${currentDeliveryFee.toLocaleString()}`, 560, yCoord);
+    ctx.textAlign = 'left';
+
+    yCoord += 35;
     ctx.fillStyle = '#0a0a0a';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText('TOTAL DUE:', 40, yCoord);
-    
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ea580c';
     ctx.font = 'bold 20px sans-serif';
@@ -202,9 +354,8 @@ export default function SupremeChopsOrder() {
     yCoord += 50;
     ctx.fillStyle = '#9ca3af';
     ctx.font = 'italic 11px sans-serif';
-    ctx.fillText('Thank you for choosing Supreme Chops International! Your order invoice is generated.', 40, yCoord);
+    ctx.fillText('Thank you for choosing Supreme Chops International! Order invoice generated.', 40, yCoord);
 
-    // Prompt immediate file browser attachment download layer
     const imageURI = canvas.toDataURL('image/jpeg', 1.0);
     const downloadLink = document.createElement('a');
     downloadLink.download = `Invoice-${customerName.replace(/\s+/g, '-')}.jpg`;
@@ -213,37 +364,43 @@ export default function SupremeChopsOrder() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 
-    // 2. --- TRANSMIT DATA BLUEPRINT VIA BACKGROUND EMAILJS PIPELINES ---
     const emailParams = {
       customer_name: customerName,
       customer_phone: customerPhone,
       alt_phone: altPhone || 'None Provided',
-      delivery_address: deliveryAddress,
+      delivery_address: `[${isForSelf ? 'ORDER FOR SELF' : 'ORDER FOR SOMEONE ELSE'}] ${deliveryAddress}`,
+      delivery_zone: `${deliveryOptions[deliveryZone].label} ${detectedKm ? `(${detectedKm}km)` : ''}`,
+      delivery_fee: `₦${currentDeliveryFee.toLocaleString()}`,
       date_time: `${formattedDate} at ${formattedTime}`,
       order_manifest: cart.map(item => `• ${item.name} (x${item.quantity}) - ₦${(item.price * item.quantity).toLocaleString()}`).join('\n'),
       total_bill: `₦${calculateTotal().toLocaleString()}`
     };
+    emailjs.send('service_ff173go', 'template_j8rkxyd', emailParams, 'x9Cbvqg5TNeYJjv_Z').catch((err) => console.error(err));
 
-    emailjs.send(
-      'service_ff173go', 
-      'template_j8rkxyd', 
-      emailParams, 
-      'x9Cbvqg5TNeYJjv_Z'
-    )
-    .then((res) => {
-       console.log('Background serverless email notification dispatched successfully!', res.status, res.text);
-    })
-    .catch((err) => {
-       console.error('Email tracking system encountered errors:', err);
-    });
+    setInvoiceGenerated(true);
+    alert("Invoice downloaded! Click the green button below to push details directly to WhatsApp.");
+  };
 
-    // 3. --- PACKAGE INVOICE LOG TEXT AND REDIRECT WINDOW TO WHATSAPP ---
-    const textManifest = cart.map(item => `• ${item.name} x${item.quantity}`).join('\n');
-    const mobileWhatsAppMessage = `🧾 *SUPREME CHOPS INVOICE CODES*\n\n👤 *Client:* ${customerName}\n📞 *Phone:* ${customerPhone}\n📍 *Address:* ${deliveryAddress}\n📆 *Timestamp:* ${formattedDate} (${formattedTime})\n\n📦 *Order Manifest Summary:*\n${textManifest}\n\n💰 *Total Dues Total:* ₦${calculateTotal().toLocaleString()}\n\n_(Note: Attached matching invoice receipt JPG file auto-downloaded to device folder.)_`;
+  // --- SANITIZED WHATSAPP ROUTER DISPATCH ---
+  const handleForwardToWhatsApp = (e) => {
+    e.preventDefault();
+    if (cart.length === 0) {
+      alert("Your order sheet is completely empty!");
+      return;
+    }
+    if (!customerName || !customerPhone || !deliveryAddress) {
+      alert("Please enter full delivery coordinates before routing to WhatsApp.");
+      return;
+    }
 
-    setTimeout(() => {
-      window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mobileWhatsAppMessage)}`;
-    }, 800);
+    const currentDateTime = new Date();
+    const formattedDate = currentDateTime.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+    const formattedTime = currentDateTime.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' });
+
+    const textManifest = cart.map(item => `- ${item.name} x${item.quantity}`).join('\n');
+    const mobileWhatsAppMessage = `*SUPREME CHOPS ORDER REQUEST*\n\n*Order Target:* ${isForSelf ? 'For Myself' : 'For Someone Else'}\n*Name/Recipient:* ${customerName}\n*Phone Number:* ${customerPhone}\n*Alternative No:* ${altPhone || 'None'}\n*Delivery Address:* ${deliveryAddress}\n*Delivery Area:* ${deliveryOptions[deliveryZone].label}${detectedKm ? ` (${detectedKm}km calculated)` : ''}\n*Timestamp:* ${formattedDate} at ${formattedTime}\n\n*Order Items Summary:*\n${textManifest}\n\n*Items Subtotal:* NGN ${calculateSubtotal().toLocaleString()}\n*Delivery Fee:* NGN ${currentDeliveryFee.toLocaleString()}\n*Grand Total Due:* NGN ${calculateTotal().toLocaleString()}\n\n(Note: Custom image invoice receipt has been downloaded onto device storage.)`;
+
+    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mobileWhatsAppMessage)}`;
   };
 
   if (siteLoading) {
@@ -260,7 +417,6 @@ export default function SupremeChopsOrder() {
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans antialiased flex flex-col justify-between relative overflow-hidden">
-      
       <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none select-none z-0 w-[500px] h-[500px] flex items-center justify-center">
         <img src={logoPng} alt="Watermark logo" className="w-full h-full object-contain grayscale" />
       </div>
@@ -291,13 +447,13 @@ export default function SupremeChopsOrder() {
         <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-10 relative z-10">
           <div className="lg:col-span-2">
             <MenuCatalog 
-              onAddToCart={handleAddToCartWithAnimation}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              onAddToCart={handleAddToCartWithAnimation} 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              sortByPriceAscending={true} // Dynamic sorting hook injected cleanly inside backend catalog rendering systems
             />
           </div>
 
-          {/* Desktop Right Hand Side Invoice Form Panel Layout */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white border border-neutral-200/60 rounded-3xl p-6 sticky top-28 shadow-xl space-y-6">
               <h3 className="text-sm font-black uppercase tracking-wider text-neutral-950 border-b pb-3">🛒 Your Order Sheet</h3>
@@ -306,7 +462,7 @@ export default function SupremeChopsOrder() {
                 <p className="text-xs text-neutral-400 py-12 text-center font-medium">Your basket is empty. Select items to construct your pack.</p>
               ) : (
                 <>
-                  <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="space-y-4 max-h-[190px] overflow-y-auto pr-1">
                     {cart.map((item) => (
                       <div key={item.uniqueId} className="flex justify-between items-center text-xs border-b border-neutral-100 pb-3">
                         <div className="space-y-0.5 max-w-[65%]">
@@ -326,21 +482,77 @@ export default function SupremeChopsOrder() {
                   </div>
 
                   <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 space-y-2">
-                    <div className="flex justify-between text-sm font-black text-neutral-900 pt-1">
+                    <div className="flex justify-between text-xs font-bold text-neutral-500">
+                      <span>Items Subtotal:</span>
+                      <span className="font-mono">₦{calculateSubtotal().toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-neutral-500">
+                      <span>Delivery Fee:</span>
+                      <span className="font-mono">₦{currentDeliveryFee.toLocaleString()}</span>
+                    </div>
+                    {detectedKm && (
+                      <div className="text-[10px] text-green-600 font-bold tracking-wide">
+                        📍 Calculated Distance: {detectedKm}km from Depot Hub
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-black text-neutral-900 pt-2 border-t">
                       <span>Total Invoice:</span>
                       <span className="font-mono text-orange-600">₦{calculateTotal().toLocaleString()}</span>
                     </div>
                   </div>
 
-                  {/* Customer Coordination Form Layout */}
-                  <form onSubmit={handleCheckoutViaWhatsApp} className="space-y-3.5 pt-2 border-t border-dashed">
+                  <div className="space-y-3.5 pt-2 border-t border-dashed">
                     <h4 className="text-[11px] font-black text-neutral-950 uppercase tracking-widest">📋 Delivery Coordinates</h4>
+                    
+                    {/* ASSIGNMENT TOGGLE TAB COMPONENT */}
+                    <div className="grid grid-cols-2 p-1 bg-neutral-100 rounded-xl border">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsForSelf(true);
+                          setDeliveryAddress('');
+                          setDetectedKm(null);
+                          setAddressSuggestions([]);
+                        }}
+                        className={`text-center py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${isForSelf ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}
+                      >
+                        🙋‍♂️ For Myself
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsForSelf(false);
+                          setDeliveryAddress('');
+                          setDetectedKm(null);
+                        }}
+                        className={`text-center py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${!isForSelf ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}
+                      >
+                        🎁 For Someone Else
+                      </button>
+                    </div>
+
+                    {isForSelf ? (
+                      <button 
+                        type="button"
+                        onClick={handleAutoDetectLocation}
+                        className="w-full border border-orange-500 bg-orange-50/50 hover:bg-orange-50 text-orange-600 font-black text-[11px] uppercase tracking-wider p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <span>{gpsLoading ? '📡 Pinning Location Coordinates...' : '📍 Click to Pin My Live Location'}</span>
+                      </button>
+                    ) : (
+                      <div className="p-3 bg-neutral-50 border border-neutral-200 text-neutral-500 text-[10px] rounded-xl font-medium leading-relaxed">
+                        🔍 Start typing the recipient's address below. The smart map index will suggest matched locations inside Lagos automatically.
+                      </div>
+                    )}
+
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Your Full Name</label>
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
+                        {isForSelf ? 'Your Full Name' : "Recipient's Full Name"}
+                      </label>
                       <input 
                         required
                         type="text" 
-                        placeholder="e.g. Olamide" 
+                        placeholder={isForSelf ? "e.g. Olamide" : "Recipient name"} 
                         className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/10 font-medium"
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
@@ -348,7 +560,7 @@ export default function SupremeChopsOrder() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Phone Number</label>
+                        <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Contact Phone</label>
                         <input 
                           required
                           type="tel" 
@@ -369,24 +581,71 @@ export default function SupremeChopsOrder() {
                         />
                       </div>
                     </div>
+                    
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Full Delivery Address</label>
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Delivery Axis / Zone</label>
+                      <select 
+                        className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/10 font-medium cursor-pointer"
+                        value={deliveryZone}
+                        onChange={e => setDeliveryZone(e.target.value)}
+                      >
+                        <option value="zone1">Zone 1: VI, Ikoyi, Lagos Island, Obalende (1-7km) — ₦1,500</option>
+                        <option value="zone2">Zone 2: Lekki Phase 1 to Ikate (8-15km) — ₦2,500</option>
+                        <option value="zone3">Zone 3: Extended Axis / Mainland (>15km) — ₦5,000</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1 relative">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
+                        {isForSelf ? 'Detected Delivery Address' : 'Search & Select Delivery Address'}
+                      </label>
                       <textarea 
                         required
                         rows="2"
-                        placeholder="House block, street, town coordinates..." 
+                        placeholder={isForSelf ? "Click the pin button above to fetch address string..." : "Type street name, estate, or building landmarks here..."} 
                         className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/10 font-medium resize-none"
                         value={deliveryAddress}
-                        onChange={e => setDeliveryAddress(e.target.value)}
+                        onChange={e => handleAddressInputChange(e.target.value)}
                       />
+
+                      {!isForSelf && (addressSuggestions.length > 0 || searchLoading) && (
+                        <div className="absolute z-50 left-0 right-0 top-[100%] mt-1 bg-white border border-neutral-200 rounded-xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto">
+                          {searchLoading && (
+                            <div className="p-3 text-[11px] text-neutral-400 font-bold italic animate-pulse">
+                              🔍 Searching mapped grid indices...
+                            </div>
+                          )}
+                          {addressSuggestions.map((suggestion, index) => (
+                            <div 
+                              key={index}
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                              className="p-3 text-[11px] font-medium text-neutral-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer border-b border-neutral-100 last:border-b-0 truncate"
+                            >
+                              📍 {suggestion.display_name.replace(', Nigeria', '').replace(', West Africa', '')}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <button 
-                      type="submit" 
-                      className="w-full bg-neutral-950 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest p-4 rounded-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 mt-2"
-                    >
-                      <span>💾 Download & Open WhatsApp</span>
-                    </button>
-                  </form>
+
+                    <div className="grid grid-cols-1 gap-2 pt-2">
+                      <button 
+                        type="button"
+                        onClick={handleDownloadInvoice}
+                        className={`w-full font-black text-xs uppercase tracking-widest p-4 rounded-xl transition-all duration-300 transform active:scale-95 border-2 ${invoiceGenerated ? 'bg-neutral-100 border-neutral-300 text-neutral-500' : 'bg-white border-neutral-950 text-neutral-950 hover:bg-neutral-50'}`}
+                      >
+                        <span>⬇️ {invoiceGenerated ? 'Invoice Downloaded Again' : 'Download Image Invoice'}</span>
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleForwardToWhatsApp}
+                        className="w-full bg-neutral-950 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest p-4 rounded-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <span>💬 Forward Order to WhatsApp</span>
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -394,7 +653,7 @@ export default function SupremeChopsOrder() {
         </main>
       </div>
 
-      {/* Floating Action Button for Mobile Users */}
+      {/* Mobile view panel */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end lg:hidden">
         <button
           id="cart-floating-trigger"
@@ -410,7 +669,6 @@ export default function SupremeChopsOrder() {
         </button>
       </div>
 
-      {/* Slide-out Mobile Sheet Form View */}
       {mobileCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
           <div onClick={() => setMobileCartOpen(false)} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm"></div>
@@ -425,7 +683,7 @@ export default function SupremeChopsOrder() {
                 <p className="text-xs text-neutral-400 py-12 text-center font-medium">Your basket is empty.</p>
               ) : (
                 <div className="space-y-6">
-                  <div className="space-y-4 max-h-[180px] overflow-y-auto pr-1">
+                  <div className="space-y-4 max-h-[160px] overflow-y-auto pr-1">
                     {cart.map((item) => (
                       <div key={item.uniqueId} className="flex justify-between items-center text-xs border-b border-neutral-100 pb-3">
                         <div className="space-y-0.5 max-w-[65%]">
@@ -446,19 +704,75 @@ export default function SupremeChopsOrder() {
 
                   <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 space-y-2">
                     <div className="flex justify-between text-xs font-bold text-neutral-500">
+                      <span>Items Subtotal:</span>
+                      <span className="font-mono">₦{calculateSubtotal().toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-neutral-500">
+                      <span>Delivery Fee:</span>
+                      <span className="font-mono">₦{currentDeliveryFee.toLocaleString()}</span>
+                    </div>
+                    {detectedKm && (
+                      <div className="text-[10px] text-green-600 font-bold tracking-wide">
+                        📍 Distance: {detectedKm}km from Hub
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs font-bold text-neutral-500 pt-1 border-t">
                       <span>Total Invoice:</span>
                       <span className="font-mono text-orange-600 font-black">₦{calculateTotal().toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <form onSubmit={handleCheckoutViaWhatsApp} className="space-y-3.5 pt-2 border-t border-dashed">
+                  <div className="space-y-3.5 pt-2 border-t border-dashed">
                     <h4 className="text-[11px] font-black text-neutral-950 uppercase tracking-widest">📋 Delivery Coordinates</h4>
+                    
+                    <div className="grid grid-cols-2 p-1 bg-neutral-100 rounded-xl border">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsForSelf(true);
+                          setDeliveryAddress('');
+                          setDetectedKm(null);
+                          setAddressSuggestions([]);
+                        }}
+                        className={`text-center py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${isForSelf ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400'}`}
+                      >
+                        🙋‍♂️ For Myself
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsForSelf(false);
+                          setDeliveryAddress('');
+                          setDetectedKm(null);
+                        }}
+                        className={`text-center py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${!isForSelf ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400'}`}
+                      >
+                        🎁 For Someone Else
+                      </button>
+                    </div>
+
+                    {isForSelf ? (
+                      <button 
+                        type="button"
+                        onClick={handleAutoDetectLocation}
+                        className="w-full border border-orange-500 bg-orange-50/50 text-orange-600 font-black text-[11px] uppercase tracking-wider p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <span>{gpsLoading ? '📡 Pinning Location Coordinates...' : '📍 Click to Pin My Live Location'}</span>
+                      </button>
+                    ) : (
+                      <div className="p-3 bg-neutral-50 border border-neutral-200 text-neutral-500 text-[10px] rounded-xl font-medium">
+                        💡 Search address metrics and choose axis zones manually below.
+                      </div>
+                    )}
+
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Your Full Name</label>
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
+                        {isForSelf ? 'Your Full Name' : "Recipient's Full Name"}
+                      </label>
                       <input 
                         required
                         type="text" 
-                        placeholder="e.g. Olamide" 
+                        placeholder={isForSelf ? "e.g. Olamide" : "Recipient name"} 
                         className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl"
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
@@ -485,31 +799,73 @@ export default function SupremeChopsOrder() {
                         onChange={e => setAltPhone(e.target.value)}
                       />
                     </div>
+                    
                     <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Delivery Axis / Zone</label>
+                      <select 
+                        className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl font-medium cursor-pointer"
+                        value={deliveryZone}
+                        onChange={e => setDeliveryZone(e.target.value)}
+                      >
+                        <option value="zone1">Zone 1: VI, Ikoyi, Lagos Island, Obalende (1-7km) — ₦1,500</option>
+                        <option value="zone2">Zone 2: Lekki Phase 1 to Ikate (8-15km) — ₦2,500</option>
+                        <option value="zone3">Zone 3: Extended Axis / Mainland (>15km) — ₦5,000</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1 relative">
                       <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Full Delivery Address</label>
                       <textarea 
                         required
                         rows="2"
-                        placeholder="Delivery coordinates..." 
+                        placeholder={isForSelf ? "Pin coordinates above..." : "Type and select recipient address..."} 
                         className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl resize-none"
                         value={deliveryAddress}
-                        onChange={e => setDeliveryAddress(e.target.value)}
+                        onChange={e => handleAddressInputChange(e.target.value)}
                       />
+
+                      {!isForSelf && (addressSuggestions.length > 0 || searchLoading) && (
+                        <div className="absolute z-50 left-0 right-0 top-[100%] mt-1 bg-white border border-neutral-200 rounded-xl shadow-2xl overflow-hidden max-h-[150px] overflow-y-auto">
+                          {searchLoading && <div className="p-3 text-[11px] text-neutral-400 italic">Searching locations...</div>}
+                          {addressSuggestions.map((suggestion, index) => (
+                            <div 
+                              key={index}
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                              className="p-3 text-[11px] text-neutral-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer border-b last:border-b-0 truncate"
+                            >
+                              📍 {suggestion.display_name.replace(', Nigeria', '').replace(', West Africa', '')}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <button 
-                      type="submit" 
-                      className="w-full bg-neutral-950 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest p-4 rounded-xl mt-2"
-                    >
-                      <span>💾 Download & Open WhatsApp</span>
-                    </button>
-                  </form>
-                </div>
+
+                    <div className="grid grid-cols-1 gap-2 pt-2">
+                      <button 
+                        type="button"
+                        onClick={handleDownloadInvoice}
+                        className={`w-full font-black text-xs uppercase tracking-widest p-4 rounded-xl border-2 ${invoiceGenerated ? 'bg-neutral-100 border-neutral-300 text-neutral-500' : 'bg-white border-neutral-950 text-neutral-950'}`}
+                      >
+                        <span>⬇️ {invoiceGenerated ? 'Invoice Downloaded' : 'Download Image Invoice'}</span>
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleForwardToWhatsApp}
+                        className="w-full bg-neutral-950 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest p-4 rounded-xl flex items-center justify-center gap-2"
+                      >
+                        <span>💬 Forward Order to WhatsApp</span>
+                      </button>
+                    </div>
+                  </div>
+                </div >
               )}
             </div>
           </div>
         </div>
       )}
       
+      {/* FOOTER FEATURING PROUD SIGNATURE DETAILS */}
       <footer className="bg-neutral-950 text-neutral-400 text-xs py-16 mt-32 border-t border-neutral-900 relative z-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="space-y-4">
@@ -536,8 +892,13 @@ export default function SupremeChopsOrder() {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 text-center text-[11px] text-neutral-600 mt-16 pt-8 border-t border-neutral-900/60">
-          &copy; 2026 Supreme Chops International. All rights reserved.
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-neutral-600 mt-16 pt-8 border-t border-neutral-900/60">
+          <div>
+            &copy; 2026 Supreme Chops International. All rights reserved.
+          </div>
+          <div className="font-black tracking-wider uppercase text-neutral-500 bg-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-800/60">
+            ⚡ Engineered by <span className="text-orange-500">SolutionPRO Technologies</span>
+          </div>
         </div>
       </footer>
     </div>
