@@ -8,61 +8,61 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
     { id: 'frozen', label: '❄️ Frozen Chops' }
   ];
 
-  // The actual master menu dataset directly from your document
+  // FIXED: Datasets sorted directly from lowest to highest price manually
   const menuItems = {
     packs: [
-      { id: 'p1', name: 'Supreme Platter', price: 40000, desc: '10 Springroll, 10 Samosa, 30 Mosa, 40 Puff Puff, 6 Corndog, 10 Crispy Chicken, 6 Moneybag, 6 Peppered Snail, 6 Prawn-in-Batter, 6 Peppered Gizzard.' },
-      { id: 'p2', name: 'Belle-Full Platter', price: 38000, desc: '15 Springroll, 15 Samosa, 50 Puff Puff, 40 Mosa, 15 Crispy Chicken, 15 Peppered Gizzard.' },
-      { id: 'p3', name: 'VIP Platter', price: 34000, desc: '8 Prawnroll, 8 Chicken Samosa, 30 Puff Puff, 25 Mosa, 5 Corndog, 5 Peppered Chicken, 5 Peppered Snail, 5 Prawn-in-Batter, 5 Fantail Prawn.' },
-      { id: 'p4', name: 'Delight Platter', price: 29000, desc: '10 Springroll, 10 Samosa, 40 Puff Puff, 30 Mosa, 10 Crispy Chicken, 6 Moneybag, 6 Corndog, 6 Peppered Gizzard.' },
-      { id: 'p5', name: 'Standard Platter', price: 25000, desc: '10 Springroll, 10 Samosa, 40 Puff Puff, 30 Mosa, 10 Crispy Chicken, 10 Peppered Gizzard.' },
-      { id: 'p6', name: 'Supreme Box', price: 20000, desc: '2 Prawnroll, 3 Springroll, 5 Beef Samosa, 15 Puff Puff, 10 Mosa, 5 Crispy Chicken, 3 Corndog, 3 Moneybag, 3 Peppered Snail, 3 Prawn-in-Batter.' },
-      { id: 'p7', name: 'Delight Box', price: 16000, desc: '3 Springroll, 5 Samosa, 15 Puff Puff, 10 Mosa, 5 Crispy Chicken, 2 Peppered Snail, 3 Peppered Gizzard, 3 Fish-in-Batter.' },
-      { id: 'p8', name: 'Standard Box', price: 14000, desc: '6 Springroll, 6 Samosa, 20 Puff Puff, 20 Mosa, 6 Peppered Gizzard, 6 Crispy Chicken.' },
-      { id: 'p9', name: 'Snack Box', price: 10000, desc: '2 Prawnroll, 2 Samosa, 15 Puff Puff, 10 Mosa, 2 Corndog, 1 Moneybag, 2 Crispy Chicken, 1 Peppered Snail, 1 Prawn-in-Batter, 3 Peppered Gizzard.' },
-      { id: 'p10', name: 'VIP Pack', price: 9000, desc: '2 Prawnroll, 2 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Corndog, 2 Peppered Gizzard, 1 Moneybag, 1 Fantail Prawn.' },
+      { id: 'p19', name: 'Economy Pack', price: 1400, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Corndog.' },
+      { id: 'p18', name: 'Solo Pack', price: 1700, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Peppered Gizzard.' },
+      { id: 'p17', name: 'Snack Pack', price: 2200, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken.' },
+      { id: 'p16', name: 'Belle-Full Pack', price: 2500, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard.' },
+      { id: 'p15', name: 'Delight Pack', price: 3000, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard, 1 Moneybag, 1 Corndog.' },
+      { id: 'p14', name: 'Supreme Pack', price: 3400, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard, 1 Moneybag, 1 Corndog, 1 Prawn-in-Batter.' },
+      { id: 'p13', name: 'Raff Pack', price: 3500, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Snail, 1 Fish-in-Batter, 1 Prawn-in-Batter.' },
       { id: 'p11', name: 'Chicken & Chips', price: 6000, desc: '4 Chicken Cut & 1 Portion of Chips.' },
       { id: 'p12', name: 'Executive Pack', price: 6000, desc: '2 Spring Roll, 2 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Moneybag, 1 Corndog, 1 Prawn-in-Batter, 1 Peppered Snail.' },
-      { id: 'p13', name: 'Raff Pack', price: 3500, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Snail, 1 Fish-in-Batter, 1 Prawn-in-Batter.' },
-      { id: 'p14', name: 'Supreme Pack', price: 3400, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard, 1 Moneybag, 1 Corndog, 1 Prawn-in-Batter.' },
-      { id: 'p15', name: 'Delight Pack', price: 3000, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard, 1 Moneybag, 1 Corndog.' },
-      { id: 'p16', name: 'Belle-Full Pack', price: 2500, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Peppered Gizzard.' },
-      { id: 'p17', name: 'Snack Pack', price: 2200, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken.' },
-      { id: 'p18', name: 'Solo Pack', price: 1700, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Peppered Gizzard.' },
-      { id: 'p19', name: 'Economy Pack', price: 1400, desc: '1 Spring Roll, 1 Samosa, 4 Mosa, 5 Puff Puff, 1 Corndog.' }
+      { id: 'p10', name: 'VIP Pack', price: 9000, desc: '2 Prawnroll, 2 Samosa, 4 Mosa, 5 Puff Puff, 1 Crispy Chicken, 1 Corndog, 2 Peppered Gizzard, 1 Moneybag, 1 Fantail Prawn.' },
+      { id: 'p9', name: 'Snack Box', price: 10000, desc: '2 Prawnroll, 2 Samosa, 15 Puff Puff, 10 Mosa, 2 Corndog, 1 Moneybag, 2 Crispy Chicken, 1 Peppered Snail, 1 Prawn-in-Batter, 3 Peppered Gizzard.' },
+      { id: 'p8', name: 'Standard Box', price: 14000, desc: '6 Springroll, 6 Samosa, 20 Puff Puff, 20 Mosa, 6 Peppered Gizzard, 6 Crispy Chicken.' },
+      { id: 'p7', name: 'Delight Box', price: 16000, desc: '3 Springroll, 5 Samosa, 15 Puff Puff, 10 Mosa, 5 Crispy Chicken, 2 Peppered Snail, 3 Peppered Gizzard, 3 Fish-in-Batter.' },
+      { id: 'p6', name: 'Supreme Box', price: 20000, desc: '2 Prawnroll, 3 Springroll, 5 Beef Samosa, 15 Puff Puff, 10 Mosa, 5 Crispy Chicken, 3 Corndog, 3 Moneybag, 3 Peppered Snail, 3 Prawn-in-Batter.' },
+      { id: 'p5', name: 'Standard Platter', price: 25000, desc: '10 Springroll, 10 Samosa, 40 Puff Puff, 30 Mosa, 10 Crispy Chicken, 10 Peppered Gizzard.' },
+      { id: 'p4', name: 'Delight Platter', price: 29000, desc: '10 Springroll, 10 Samosa, 40 Puff Puff, 30 Mosa, 10 Crispy Chicken, 6 Moneybag, 6 Corndog, 6 Peppered Gizzard.' },
+      { id: 'p3', name: 'VIP Platter', price: 34000, desc: '8 Prawnroll, 8 Chicken Samosa, 30 Puff Puff, 25 Mosa, 5 Corndog, 5 Peppered Chicken, 5 Peppered Snail, 5 Prawn-in-Batter, 5 Fantail Prawn.' },
+      { id: 'p2', name: 'Belle-Full Platter', price: 38000, desc: '15 Springroll, 15 Samosa, 50 Puff Puff, 40 Mosa, 15 Crispy Chicken, 15 Peppered Gizzard.' },
+      { id: 'p1', name: 'Supreme Platter', price: 40000, desc: '10 Springroll, 10 Samosa, 30 Mosa, 40 Puff Puff, 6 Corndog, 10 Crispy Chicken, 6 Moneybag, 6 Peppered Snail, 6 Prawn-in-Batter, 6 Peppered Gizzard.' }
     ],
     customize: [
-      { id: 'c1', name: 'Crispy Chicken', price: 1000 },
-      { id: 'c2', name: 'Peppered Chicken', price: 1100 },
-      { id: 'c3', name: 'BBQ Chicken', price: 1100 },
-      { id: 'c4', name: 'Chicken Kebab', price: 1200 },
-      { id: 'c5', name: 'Peppered Gizzard', price: 400 },
-      { id: 'c6', name: 'Corndog', price: 350 },
       { id: 'c7', name: 'Vegetable Spring Roll', price: 250 },
       { id: 'c8', name: 'Beef Samosa', price: 250 },
       { id: 'c9', name: 'Chicken Spring Roll', price: 300 },
       { id: 'c10', name: 'Chicken Samosa', price: 300 },
-      { id: 'c11', name: 'Prawn Roll', price: 800 },
-      { id: 'c12', name: 'Shrimp Samosa', price: 450 },
+      { id: 'c6', name: 'Corndog', price: 350 },
       { id: 'c13', name: 'Money Bag', price: 350 },
+      { id: 'c5', name: 'Peppered Gizzard', price: 400 },
+      { id: 'c12', name: 'Shrimp Samosa', price: 450 },
+      { id: 'c19', name: 'Fish-in-Batter', price: 450 },
+      { id: 'c22', name: 'Peppered Stick-Meat', price: 450 },
+      { id: 'c16', name: 'Prawn-in-Batter', price: 500 },
+      { id: 'c18', name: 'Fantail Prawn', price: 600 },
+      { id: 'c11', name: 'Prawn Roll', price: 800 },
       { id: 'c14', name: 'x5 Puff Puff', price: 800 },
       { id: 'c15', name: 'x5 Mosa', price: 800 },
-      { id: 'c16', name: 'Prawn-in-Batter', price: 500 },
-      { id: 'c17', name: 'Prawn Kebab', price: 1800 },
-      { id: 'c18', name: 'Fantail Prawn', price: 600 },
-      { id: 'c19', name: 'Fish-in-Batter', price: 450 },
       { id: 'c20', name: 'Peppered Snail', price: 900 },
+      { id: 'c1', name: 'Crispy Chicken', price: 1000 },
+      { id: 'c2', name: 'Peppered Chicken', price: 1100 },
+      { id: 'c3', name: 'BBQ Chicken', price: 1100 },
+      { id: 'c4', name: 'Chicken Kebab', price: 1200 },
       { id: 'c21', name: 'Beef Kebab', price: 1500 },
-      { id: 'c22', name: 'Peppered Stick-Meat', price: 450 }
+      { id: 'c17', name: 'Prawn Kebab', price: 1800 }
     ],
     frozen: [
       { id: 'f1', name: 'Springroll (Frozen)', price: 200 },
       { id: 'f2', name: 'Samosa (Frozen)', price: 200 },
       { id: 'f3', name: 'Chicken Springroll (Frozen)', price: 250 },
       { id: 'f4', name: 'Chicken Samosa (Frozen)', price: 250 },
-      { id: 'f5', name: 'Prawn Spring Roll with Mayo (Frozen)', price: 700 },
-      { id: 'f6', name: 'Shrimp Samosa (Frozen)', price: 400 },
       { id: 'f7', name: 'Money Bag (Frozen)', price: 300 },
+      { id: 'f6', name: 'Shrimp Samosa (Frozen)', price: 400 },
+      { id: 'f5', name: 'Prawn Spring Roll with Mayo (Frozen)', price: 700 },
       { id: 'f8', name: 'Marinated Chicken (Frozen)', price: 900 },
       { id: 'f9', name: 'Chicken Kebab (Frozen)', price: 1000 },
       { id: 'f10', name: 'Beef Kebab (Frozen)', price: 1400 },
@@ -70,7 +70,6 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
     ]
   };
 
-  // Safe fallback to avoid any route crashing
   const activeItems = menuItems[activeTab] || menuItems['packs'];
 
   return (
