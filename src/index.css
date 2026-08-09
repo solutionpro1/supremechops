@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Glide Particle Trajectory Keyframes */
+@keyframes glideToCart {
+  0% {
+    left: var(--start-x);
+    top: var(--start-y);
+    opacity: 1;
+    transform: scale(1.5);
+  }
+  100% {
+    left: 40px;
+    top: calc(100vh - 40px);
+    opacity: 0.1;
+    transform: scale(0.2);
+  }
+}
+
+.animate-glide-to-cart {
+  animation: glideToCart 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
