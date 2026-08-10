@@ -3,7 +3,7 @@
 export default function HeroSection({ onNavigateToCustomize, onSelectLocation }) {
   return (
     <section className="relative bg-neutral-950 text-white pt-12 pb-20 px-6 overflow-hidden">
-      {/* Background Subtle Foody Glow */}
+      {/* Background Glow Effects */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -14,7 +14,7 @@ export default function HeroSection({ onNavigateToCustomize, onSelectLocation })
           <span>Freshly Made Gourmet Small Chops in Lagos</span>
         </div>
 
-        {/* Big Foodie Catchy Headline */}
+        {/* Big Foodie Headline */}
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight uppercase font-foody">
           Craving Hot, Crispy <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-400 to-orange-400">
@@ -27,11 +27,10 @@ export default function HeroSection({ onNavigateToCustomize, onSelectLocation })
           Order premium finger foods, party platters, and custom snack packs delivered fresh across Lagos within hours.
         </p>
 
-        {/* Hero Interactive Order / Location Trigger Box */}
-        <div className="max-w-xl mx-auto pt-4">
+        {/* Hero Action Buttons */}
+        <div className="max-w-xl mx-auto pt-4 space-y-4">
           <div className="bg-white/10 backdrop-blur-xl border border-white/15 p-2 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2">
             <div className="flex-1 w-full flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/10 text-left">
-              {/* Custom SVG Location Badge */}
               <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shrink-0">
                 <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -58,6 +57,17 @@ export default function HeroSection({ onNavigateToCustomize, onSelectLocation })
               <span>Order Menu Now</span>
             </button>
           </div>
+
+          {/* Dedicated Customize Pack CTA Tab */}
+          <button
+            onClick={onNavigateToCustomize}
+            className="w-full bg-neutral-900/90 hover:bg-neutral-800 text-orange-400 border border-orange-500/30 hover:border-orange-500/60 font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all duration-300 backdrop-blur-md shadow-md flex items-center justify-center gap-2 transform active:scale-95"
+          >
+            <span>✨ Customize Your Pack</span>
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </button>
         </div>
 
         {/* Quick Highlights Row */}

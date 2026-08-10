@@ -1,6 +1,5 @@
-﻿import React from 'react';
+﻿import React, { useRef } from 'react';
 
-// Dynamic asset fetch helper with fallback image
 const getAssetImage = (fileName) => {
   try {
     return new URL(`../assets/${fileName}`, import.meta.url).href;
@@ -10,6 +9,8 @@ const getAssetImage = (fileName) => {
 };
 
 export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
+  const scrollContainerRef = useRef(null);
+
   const tabs = [
     { id: 'packs', label: 'Platters & Packs' },
     { id: 'customize', label: 'Customize Pack' },
@@ -77,94 +78,140 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
     ]
   };
 
-  const activeItems = menuItems[activeTab] || menuItems['packs'];
+  const handleTabClick = (tabId, index) => {
+    setActiveTab(tabId);
+    if (scrollContainerRef.current) {
+      const targetWidth = scrollContainerRef.current.offsetWidth;
+      scrollContainerRef.current.scrollTo({
+        left: targetWidth * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const scrollLeft = scrollContainerRef.current.scrollLeft;
+      const width = scrollContainerRef.current.offsetWidth;
+      const pageIndex = Math.round(scrollLeft / width);
+      if (tabs[pageIndex] && tabs[pageIndex].id !== activeTab) {
+        setActiveTab(tabs[pageIndex].id);
+      }
+    }
+  };
 
   return (
-    <div id="menu-catalog" className="space-y-8 scroll-mt-24">
-      {/* Category Selection Tabs */}
-      <div className="flex border-b border-neutral-200 overflow-x-auto no-scrollbar gap-2 p-1.5 bg-neutral-100/80 rounded-2xl backdrop-blur-sm">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 whitespace-nowrap text-xs font-black uppercase tracking-wider py-3.5 px-6 rounded-xl transition-all duration-300 transform active:scale-95 ${
-                isActive
-                  ? 'bg-white text-orange-600 shadow-md scale-[1.01]'
-                  : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
+    <div id="menu-catalog" className="space-y-6 scroll-mt-28">
+      {/* PERSISTENT STICKY CATEGORY HEADER BAR */}
+      <div className="sticky top-20 z-40 bg-neutral-50/95 backdrop-blur-md py-3 border-b border-neutral-200/80">
+        <div className="flex gap-2 p-1.5 bg-neutral-100/90 rounded-2xl border border-neutral-200/60 shadow-sm">
+          {tabs.map((tab, index) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id, index)}
+                className={`flex-1 whitespace-nowrap text-xs font-black uppercase tracking-wider py-3.5 px-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
+                  isActive
+                    ? 'bg-white text-orange-600 shadow-md scale-[1.01]'
+                    : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Conditionally Render Layout Based on Active Tab */}
-      {activeTab === 'customize' ? (
-        /* Customize Pack List View with Small Thumbnail on the Left */
-        <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 shadow-sm space-y-3">
-          <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
-            <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Customize Item & Thumbnail</span>
-            <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price & Add</span>
-          </div>
-
-          <div className="divide-y divide-neutral-100">
-            {activeItems.map((item) => (
-              <div key={item.id} className="py-3.5 flex items-center justify-between gap-4 hover:bg-orange-50/40 px-3 rounded-2xl transition-colors">
-                <div className="flex items-center gap-3.5">
+      {/* HORIZONTAL SWIPEABLE CONTAINER WITH UNBLOCKED VERTICAL TOUCH SCROLLING */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar w-full touch-pan-y"
+        style={{ 
+          scrollSnapType: 'x mandatory',
+          touchAction: 'pan-y pan-x'
+        }}
+      >
+        {/* PANEL 1: Platters & Packs */}
+        <div className="w-full shrink-0 snap-start pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {menuItems.packs.map((item) => (
+              <div
+                key={item.id}
+                className="group bg-white border border-neutral-200/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-orange-500/60 hover:shadow-xl hover:-translate-y-1"
+              >
+                <div className="h-44 w-full relative overflow-hidden bg-neutral-100">
                   <img 
                     src={item.image} 
                     alt={item.name}
-                    className="w-14 h-14 object-cover rounded-xl border border-neutral-200 shrink-0 shadow-sm"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     loading="lazy"
                   />
-                  <div>
-                    <h4 className="font-extrabold text-sm text-neutral-900">{item.name}</h4>
-                    <span className="font-mono text-xs font-black text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block mt-1">
+                  <div className="absolute top-3 right-3">
+                    <span className="font-mono text-xs font-black text-neutral-900 bg-white/95 backdrop-blur-md text-orange-600 px-3 py-1.5 rounded-xl border border-neutral-200/80 shadow-md">
                       ₦{item.price.toLocaleString()}
                     </span>
                   </div>
                 </div>
 
-                <button
-                  onClick={(e) => onAddToCart(item, activeTab, e)}
-                  className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm shrink-0"
-                >
-                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                  </svg>
-                  <span>Add</span>
-                </button>
+                <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-extrabold text-sm text-neutral-900 tracking-tight group-hover:text-orange-600 transition-colors duration-200">
+                      {item.name}
+                    </h4>
+                    {item.desc && (
+                      <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                        {item.desc}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={(e) => onAddToCart(item, 'packs', e)}
+                    className="w-full bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 transform active:scale-95 shadow-sm hover:shadow-orange-600/20 mt-auto"
+                  >
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    <span>Add to Pack</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      ) : activeTab === 'frozen' ? (
-        /* Frozen Chops List View (No Pictures) */
-        <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 shadow-sm space-y-3">
-          <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
-            <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Frozen Item Name</span>
-            <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price</span>
-          </div>
 
-          <div className="divide-y divide-neutral-100">
-            {activeItems.map((item) => (
-              <div key={item.id} className="py-3.5 flex justify-between items-center gap-4 hover:bg-orange-50/40 px-3 rounded-xl transition-colors">
-                <div>
-                  <h4 className="font-extrabold text-sm text-neutral-900">{item.name}</h4>
-                  <p className="text-[10px] text-neutral-400 font-medium mt-0.5">Ready for deep-fry / home preparation</p>
-                </div>
+        {/* PANEL 2: Customize Pack */}
+        <div className="w-full shrink-0 snap-start px-1">
+          <div className="bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
+            <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
+              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Customize Item & Thumbnail</span>
+              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price & Add</span>
+            </div>
 
-                <div className="flex items-center gap-4 shrink-0">
-                  <span className="font-mono text-xs font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-lg border border-orange-100">
-                    ₦{item.price.toLocaleString()}
-                  </span>
+            <div className="divide-y divide-neutral-100">
+              {menuItems.customize.map((item) => (
+                <div key={item.id} className="py-3.5 flex items-center justify-between gap-4 hover:bg-orange-50/40 px-2 sm:px-3 rounded-2xl transition-colors">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={item.image} 
+                      alt={item.name}
+                      className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-neutral-200 shrink-0 shadow-sm"
+                      loading="lazy"
+                    />
+                    <div>
+                      <h4 className="font-extrabold text-xs sm:text-sm text-neutral-900">{item.name}</h4>
+                      <span className="font-mono text-[11px] font-black text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block mt-1">
+                        ₦{item.price.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
 
                   <button
-                    onClick={(e) => onAddToCart(item, activeTab, e)}
-                    className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm"
+                    onClick={(e) => onAddToCart(item, 'customize', e)}
+                    className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm shrink-0"
                   >
                     <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                       <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -172,58 +219,48 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
                     <span>Add</span>
                   </button>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      ) : (
-        /* Platters & Packs Grid View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {activeItems.map((item) => (
-            <div
-              key={item.id}
-              className="group bg-white border border-neutral-200/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-orange-500/60 hover:shadow-xl hover:-translate-y-1"
-            >
-              <div className="h-44 w-full relative overflow-hidden bg-neutral-100">
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  loading="lazy"
-                />
-                <div className="absolute top-3 right-3">
-                  <span className="font-mono text-xs font-black text-neutral-900 bg-white/95 backdrop-blur-md text-orange-600 px-3 py-1.5 rounded-xl border border-neutral-200/80 shadow-md">
-                    ₦{item.price.toLocaleString()}
-                  </span>
-                </div>
-              </div>
 
-              <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
-                <div className="space-y-2">
-                  <h4 className="font-extrabold text-sm text-neutral-900 tracking-tight group-hover:text-orange-600 transition-colors duration-200">
-                    {item.name}
-                  </h4>
-                  {item.desc && (
-                    <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                      {item.desc}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={(e) => onAddToCart(item, activeTab, e)}
-                  className="w-full bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 transform active:scale-95 shadow-sm hover:shadow-orange-600/20 mt-auto"
-                >
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                  </svg>
-                  <span>Add to Pack</span>
-                </button>
-              </div>
+        {/* PANEL 3: Frozen Chops */}
+        <div className="w-full shrink-0 snap-start pl-1">
+          <div className="bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
+            <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
+              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Frozen Item Name</span>
+              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price</span>
             </div>
-          ))}
+
+            <div className="divide-y divide-neutral-100">
+              {menuItems.frozen.map((item) => (
+                <div key={item.id} className="py-3.5 flex justify-between items-center gap-4 hover:bg-orange-50/40 px-2 sm:px-3 rounded-xl transition-colors">
+                  <div>
+                    <h4 className="font-extrabold text-xs sm:text-sm text-neutral-900">{item.name}</h4>
+                    <p className="text-[10px] text-neutral-400 font-medium mt-0.5">Ready for deep-fry / home preparation</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-mono text-[11px] font-black text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
+                      ₦{item.price.toLocaleString()}
+                    </span>
+
+                    <button
+                      onClick={(e) => onAddToCart(item, 'frozen', e)}
+                      className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3.5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm"
+                    >
+                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                      </svg>
+                      <span>Add</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
