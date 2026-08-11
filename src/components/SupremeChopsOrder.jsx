@@ -10,7 +10,7 @@ import CheckoutWizard from './CheckoutWizard';
 import logoPng from '../assets/logo.png';
 
 export default function SupremeChopsOrder() {
-  const [currentPage, setCurrentPage] = useState('menu'); // 'menu', 'event', 'gallery'
+  const [currentPage, setCurrentPage] = useState('menu');
   const [siteLoading, setSiteLoading] = useState(true);
   const [transitioning, setTransitioning] = useState(false);
   const [cart, setCart] = useState([]);
@@ -512,7 +512,7 @@ export default function SupremeChopsOrder() {
                     onClick={() => handleNavClick('gallery')}
                     className="w-full text-left py-3 px-4 rounded-xl hover:bg-neutral-900 text-sm font-black uppercase tracking-wider text-neutral-200 hover:text-orange-500 transition-colors flex items-center justify-between"
                   >
-                    <span>Gallery (10 Photos)</span>
+                    <span>Gallery</span>
                     <span className="text-neutral-600">→</span>
                   </button>
                   <button
