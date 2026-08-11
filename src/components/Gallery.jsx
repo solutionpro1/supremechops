@@ -12,16 +12,16 @@ export default function Gallery({ onBackToMenu, onOrderNow }) {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const galleryImages = [
-    { id: 1, title: 'Supreme Platter Display', category: 'Platters', image: getAssetImage('supreme-platter.jpg'), desc: 'Our flagship platter with Spring Rolls, Samosas, Mosa, Puff Puff, Corndogs, Moneybags, and Peppered Snail.' },
-    { id: 2, title: 'VIP Platter Feast', category: 'Platters', image: getAssetImage('vip-platter.jpg'), desc: 'Loaded with Prawnrolls, Chicken Samosas, Fantail Prawns, and Peppered Chicken.' },
-    { id: 3, title: 'Golden Crispy Chicken', category: 'Chicken', image: getAssetImage('crispy-chicken.jpg'), desc: 'Double-breaded signature crispy fried chicken cuts.' },
-    { id: 4, title: 'Spicy Peppered Snail & Gizzard', category: 'Grill & Peppered', image: getAssetImage('peppered-snail.jpg'), desc: 'Authentic Nigerian pepper sauce tossed over tender snails and gizzards.' },
-    { id: 5, title: 'Golden Puff Puff & Mosa', category: 'Snacks', image: getAssetImage('puff-puff.jpg'), desc: 'Piping hot, fluffy sweet puff puff and fried plantain mosa.' },
-    { id: 6, title: 'Beef & Chicken Samosas', category: 'Finger Foods', image: getAssetImage('beef-samosa.jpg'), desc: 'Flaky pastry triangle envelopes packed with spiced minced meat.' },
-    { id: 7, title: 'Vegetable & Chicken Spring Rolls', category: 'Finger Foods', image: getAssetImage('chicken-spring-roll.jpg'), desc: 'Golden crunchy spring rolls filled with seasoned veggies and chicken.' },
-    { id: 8, title: 'Corndogs & Moneybags', category: 'Specialties', image: getAssetImage('money-bag.jpg'), desc: 'Savory sausage corndogs and fried seafood moneybags.' },
-    { id: 9, title: 'Chicken & Beef Kebabs', category: 'Grill', image: getAssetImage('chicken-kebab.jpg'), desc: 'Skewered marinated chicken and beef grilled to perfection.' },
-    { id: 10, title: 'Event Catering Setup', category: 'Events', image: getAssetImage('standard-platter.jpg'), desc: 'Buffational small chops stations prepared for weddings, birthdays, and corporate events.' }
+    { id: 1, title: 'Deluxe Small Chops Platter', category: 'Platters', image: getAssetImage('supreme-platter.jpg'), desc: 'Loaded gourmet platter featuring Spring Rolls, Samosas, Mosa, Puff Puff, Corndogs, Moneybags, and Peppered Snail.' },
+    { id: 2, title: 'VIP Party Box', category: 'Platters', image: getAssetImage('vip-platter.jpg'), desc: 'Executive party box with Prawnrolls, Chicken Samosas, Fantail Prawns, and Peppered Chicken.' },
+    { id: 3, title: 'Signature Crispy Chicken', category: 'Chicken & Grill', image: getAssetImage('crispy-chicken.jpg'), desc: 'Hot, double-breaded crispy fried chicken cuts prepared fresh daily.' },
+    { id: 4, title: 'Spicy Peppered Snail & Gizzard', category: 'Grill & Peppered', image: getAssetImage('peppered-snail.jpg'), desc: 'Tender jumbo snails and gizzards smothered in authentic spicy pepper sauce.' },
+    { id: 5, title: 'Hot Puff Puff & Plantain Mosa', category: 'Snacks', image: getAssetImage('puff-puff.jpg'), desc: 'Golden sweet puff puff and sweet plantain mosa balls.' },
+    { id: 6, title: 'Crispy Beef & Chicken Samosas', category: 'Finger Foods', image: getAssetImage('beef-samosa.jpg'), desc: 'Handcrafted triangular pastry pockets stuffed with seasoned minced meat.' },
+    { id: 7, title: 'Golden Vegetable Spring Rolls', category: 'Finger Foods', image: getAssetImage('chicken-spring-roll.jpg'), desc: 'Crispy spring rolls filled with seasoned cabbage, carrots, and chicken.' },
+    { id: 8, title: 'Seafood Moneybags & Corndogs', category: 'Specialties', image: getAssetImage('money-bag.jpg'), desc: 'Fried wonton moneybags and savory sausage corndogs.' },
+    { id: 9, title: 'Flame-Grilled Chicken Kebabs', category: 'Grill', image: getAssetImage('chicken-kebab.jpg'), desc: 'Skewered chicken cuts marinated in suya spices and flame grilled.' },
+    { id: 10, title: 'Live Event Catering Station', category: 'Event Catering', image: getAssetImage('standard-platter.jpg'), desc: 'Live frying and finger food station setup for Lagos weddings and corporate parties.' }
   ];
 
   return (
@@ -31,7 +31,7 @@ export default function Gallery({ onBackToMenu, onOrderNow }) {
         <div className="absolute top-0 right-0 w-80 h-80 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
         
         <span className="inline-block bg-orange-500/20 border border-orange-500/40 text-orange-400 font-mono text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
-          Visual Feast
+          Photo Gallery
         </span>
         
         <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">
@@ -39,7 +39,7 @@ export default function Gallery({ onBackToMenu, onOrderNow }) {
         </h2>
         
         <p className="text-neutral-400 text-xs sm:text-sm max-w-xl mx-auto font-medium leading-relaxed">
-          Take a look at our freshly fried finger foods, deluxe party platters, and live event setups across Lagos.
+          Freshly fried finger foods, party platters, and event catering setups.
         </p>
 
         <div className="pt-2 flex justify-center gap-3">
@@ -58,7 +58,7 @@ export default function Gallery({ onBackToMenu, onOrderNow }) {
         </div>
       </div>
 
-      {/* Grid of 10 Pictures */}
+      {/* Grid of Pictures */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {galleryImages.map((item) => (
           <div
