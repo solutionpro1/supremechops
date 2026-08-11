@@ -63,7 +63,10 @@ export default function HeroSection({ onNavigateToCustomize, onSelectLocation })
             onClick={onNavigateToCustomize}
             className="w-full bg-neutral-900/90 hover:bg-neutral-800 text-orange-400 border border-orange-500/30 hover:border-orange-500/60 font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all duration-300 backdrop-blur-md shadow-md flex items-center justify-center gap-2 transform active:scale-95"
           >
-            <span>✨ Customize Your Pack</span>
+            <svg className="w-4 h-4 fill-current text-amber-400" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+            <span>Customize Your Pack</span>
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
               <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
             </svg>

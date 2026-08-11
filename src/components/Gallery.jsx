@@ -1,0 +1,153 @@
+﻿import React, { useState } from 'react';
+
+const getAssetImage = (fileName) => {
+  try {
+    return new URL(`../assets/${fileName}`, import.meta.url).href;
+  } catch (e) {
+    return 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80';
+  }
+};
+
+export default function Gallery({ onBackToMenu, onOrderNow }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const galleryImages = [
+    { id: 1, title: 'Supreme Platter Display', category: 'Platters', image: getAssetImage('supreme-platter.jpg'), desc: 'Our flagship platter with Spring Rolls, Samosas, Mosa, Puff Puff, Corndogs, Moneybags, and Peppered Snail.' },
+    { id: 2, title: 'VIP Platter Feast', category: 'Platters', image: getAssetImage('vip-platter.jpg'), desc: 'Loaded with Prawnrolls, Chicken Samosas, Fantail Prawns, and Peppered Chicken.' },
+    { id: 3, title: 'Golden Crispy Chicken', category: 'Chicken', image: getAssetImage('crispy-chicken.jpg'), desc: 'Double-breaded signature crispy fried chicken cuts.' },
+    { id: 4, title: 'Spicy Peppered Snail & Gizzard', category: 'Grill & Peppered', image: getAssetImage('peppered-snail.jpg'), desc: 'Authentic Nigerian pepper sauce tossed over tender snails and gizzards.' },
+    { id: 5, title: 'Golden Puff Puff & Mosa', category: 'Snacks', image: getAssetImage('puff-puff.jpg'), desc: 'Piping hot, fluffy sweet puff puff and fried plantain mosa.' },
+    { id: 6, title: 'Beef & Chicken Samosas', category: 'Finger Foods', image: getAssetImage('beef-samosa.jpg'), desc: 'Flaky pastry triangle envelopes packed with spiced minced meat.' },
+    { id: 7, title: 'Vegetable & Chicken Spring Rolls', category: 'Finger Foods', image: getAssetImage('chicken-spring-roll.jpg'), desc: 'Golden crunchy spring rolls filled with seasoned veggies and chicken.' },
+    { id: 8, title: 'Corndogs & Moneybags', category: 'Specialties', image: getAssetImage('money-bag.jpg'), desc: 'Savory sausage corndogs and fried seafood moneybags.' },
+    { id: 9, title: 'Chicken & Beef Kebabs', category: 'Grill', image: getAssetImage('chicken-kebab.jpg'), desc: 'Skewered marinated chicken and beef grilled to perfection.' },
+    { id: 10, title: 'Event Catering Setup', category: 'Events', image: getAssetImage('standard-platter.jpg'), desc: 'Buffational small chops stations prepared for weddings, birthdays, and corporate events.' }
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8 animate-fade-in">
+      {/* Header Banner */}
+      <div className="bg-neutral-950 text-white p-8 sm:p-12 rounded-3xl relative overflow-hidden text-center space-y-4 border border-neutral-800 shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
+        
+        <span className="inline-block bg-orange-500/20 border border-orange-500/40 text-orange-400 font-mono text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
+          Visual Feast
+        </span>
+        
+        <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">
+          Supreme Chops <span className="text-orange-500">Gallery</span>
+        </h2>
+        
+        <p className="text-neutral-400 text-xs sm:text-sm max-w-xl mx-auto font-medium leading-relaxed">
+          Take a look at our freshly fried finger foods, deluxe party platters, and live event setups across Lagos.
+        </p>
+
+        <div className="pt-2 flex justify-center gap-3">
+          <button
+            onClick={onOrderNow}
+            className="bg-orange-600 hover:bg-orange-500 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-orange-600/30"
+          >
+            Order These Now
+          </button>
+          <button
+            onClick={onBackToMenu}
+            className="bg-neutral-900 border border-neutral-700 hover:bg-neutral-800 text-neutral-300 font-bold text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-all"
+          >
+            ← Back to Menu
+          </button>
+        </div>
+      </div>
+
+      {/* Grid of 10 Pictures */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {galleryImages.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => setSelectedImage(item)}
+            className="group bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+          >
+            <div className="h-56 w-full relative overflow-hidden bg-neutral-100">
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                loading="lazy"
+              />
+              <div className="absolute top-3 left-3">
+                <span className="bg-neutral-950/80 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl border border-white/10">
+                  {item.category}
+                </span>
+              </div>
+              <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <span className="bg-white text-neutral-950 font-black text-xs uppercase tracking-wider px-4 py-2 rounded-xl shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                  View Full Image
+                </span>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-1.5">
+              <h4 className="font-extrabold text-sm text-neutral-900 group-hover:text-orange-600 transition-colors">
+                {item.title}
+              </h4>
+              <p className="text-[11px] text-neutral-500 line-clamp-2 leading-relaxed font-medium">
+                {item.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* LIGHTBOX PREVIEW MODAL */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[200] bg-neutral-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border border-neutral-200 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-4 relative">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 z-10 w-9 h-9 bg-neutral-950/80 hover:bg-orange-600 text-white font-bold rounded-full text-sm flex items-center justify-center backdrop-blur-md transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="h-72 sm:h-96 w-full bg-neutral-950 relative">
+              <img
+                src={selectedImage.image}
+                alt={selectedImage.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="p-6 space-y-3">
+              <span className="bg-orange-100 text-orange-600 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
+                {selectedImage.category}
+              </span>
+              <h3 className="text-xl font-black text-neutral-900 uppercase">
+                {selectedImage.title}
+              </h3>
+              <p className="text-xs text-neutral-600 leading-relaxed font-medium">
+                {selectedImage.desc}
+              </p>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedImage(null);
+                    onOrderNow();
+                  }}
+                  className="flex-1 bg-neutral-950 hover:bg-orange-600 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-colors"
+                >
+                  Order This Item
+                </button>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="px-5 bg-neutral-100 text-neutral-600 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-neutral-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
