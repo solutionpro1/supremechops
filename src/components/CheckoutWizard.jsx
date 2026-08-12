@@ -385,12 +385,12 @@ export default function CheckoutWizard({
             {/* Customer Details */}
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
-                {isForSelf ? 'Your Full Name' : "Recipient's Full Name"}
+                {isForSelf ? 'Full Name' : "Recipient's Full Name"}
               </label>
               <input 
                 required
                 type="text" 
-                placeholder={isForSelf ? "e.g. Olamide" : "Recipient full name"} 
+                placeholder="Enter full name..." 
                 className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/10 font-medium"
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
@@ -403,7 +403,7 @@ export default function CheckoutWizard({
                 <input 
                   required
                   type="tel" 
-                  placeholder="0708..." 
+                  placeholder="Enter phone number..." 
                   className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/10 font-medium"
                   value={customerPhone}
                   onChange={e => setCustomerPhone(e.target.value)}
