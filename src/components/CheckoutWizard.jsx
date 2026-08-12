@@ -239,14 +239,14 @@ export default function CheckoutWizard({
           </div>
         )}
 
-        {/* STEP 1: ORDER CONFIRMATION & BANK DETAILS */}
+        {/* STEP 1: ORDER CONFIRMATION */}
         {step === 1 && (
           <div className="space-y-5 py-1">
             {cart.length === 0 ? (
               <p className="text-xs text-neutral-400 py-12 text-center font-medium">Your basket is empty. Select items to construct your pack.</p>
             ) : (
               <>
-                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
                   {cart.map((item) => (
                     <div key={item.uniqueId} className="flex justify-between items-center text-xs border-b border-neutral-100 pb-3">
                       <div className="space-y-0.5 max-w-[65%]">
@@ -277,34 +277,6 @@ export default function CheckoutWizard({
                   <div className="flex justify-between text-sm font-black text-neutral-900 pt-1.5 border-t">
                     <span>Grand Total:</span>
                     <span className="font-mono text-orange-600">₦{calculateTotal().toLocaleString()}</span>
-                  </div>
-                </div>
-
-                {/* Bank Account Details */}
-                <div className="bg-orange-50/70 border border-orange-200/80 rounded-2xl p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase text-orange-700 tracking-wider flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 fill-current text-orange-600" viewBox="0 0 24 24">
-                        <path d="M4 10h16v2H4zm0 4h16v2H4zm0-8h16v2H4zm-2 14h20V4H2v16zm2-14h16v12H4V6z"/>
-                      </svg>
-                      Payment Account (Direct Transfer)
-                    </span>
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase">{BANK_ACCOUNT.bankName}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-1">
-                    <div>
-                      <p className="text-base font-mono font-black text-neutral-900 tracking-wider">{BANK_ACCOUNT.accountNumber}</p>
-                      <p className="text-[11px] font-bold text-neutral-600 uppercase">{BANK_ACCOUNT.accountName}</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyBankAccount}
-                      className="bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1 shrink-0"
-                    >
-                      {copiedBank ? "Copied!" : "Copy Acc"}
-                    </button>
                   </div>
                 </div>
 
@@ -380,7 +352,7 @@ export default function CheckoutWizard({
           </div>
         )}
 
-        {/* STEP 3: LOGISTICS METHOD & COORDINATES */}
+        {/* STEP 3: LOGISTICS METHOD, COORDINATES & PAYMENT ACCOUNT */}
         {step === 3 && (
           <div className="space-y-4 py-1">
             
