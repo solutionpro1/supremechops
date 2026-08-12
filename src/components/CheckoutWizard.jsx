@@ -573,6 +573,34 @@ export default function CheckoutWizard({
               />
             </div>
 
+            {/* STEP 3 PAYMENT TRANSFER DETAILS DISPLAY */}
+            <div className="bg-orange-50/90 border border-orange-200 rounded-2xl p-4 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase text-orange-700 tracking-wider flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 fill-current text-orange-600" viewBox="0 0 24 24">
+                    <path d="M4 10h16v2H4zm0 4h16v2H4zm0-8h16v2H4zm-2 14h20V4H2v16zm2-14h16v12H4V6z"/>
+                  </svg>
+                  Payment Bank Account (Direct Transfer)
+                </span>
+                <span className="text-[10px] font-black text-neutral-600 uppercase">{BANK_ACCOUNT.bankName}</span>
+              </div>
+
+              <div className="flex justify-between items-center pt-1">
+                <div>
+                  <p className="text-base font-mono font-black text-neutral-900 tracking-wider">{BANK_ACCOUNT.accountNumber}</p>
+                  <p className="text-[11px] font-bold text-neutral-700 uppercase">{BANK_ACCOUNT.accountName}</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCopyBankAccount}
+                  className="bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1 shrink-0"
+                >
+                  {copiedBank ? "Copied!" : "Copy Acc"}
+                </button>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="grid grid-cols-1 gap-2 pt-2">
               <button 

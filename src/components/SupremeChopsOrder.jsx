@@ -33,10 +33,11 @@ export default function SupremeChopsOrder() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
 
+  // UPDATED MONIEPOINT BANK DETAILS
   const BANK_ACCOUNT = {
-    bankName: "OPay",
-    accountNumber: "7081241745",
-    accountName: "AYINDE YUSUF BELLO"
+    bankName: "Moniepoint",
+    accountNumber: "6716087077",
+    accountName: "SUPREME CHOPS INTERNATIONAL"
   };
 
   const deliveryOptions = {
