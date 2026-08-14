@@ -6,6 +6,7 @@ import EventBooking from './EventBooking';
 import Gallery from './Gallery';
 import FloatingSocials from './FloatingSocials';
 import CheckoutWizard from './CheckoutWizard';
+import { HoursNoticeModal } from './HoursNoticeModal';
 
 import logoPng from '../assets/logo.png';
 

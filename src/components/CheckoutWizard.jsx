@@ -1,4 +1,5 @@
-﻿import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
+import { DeliveryScheduling } from './DeliveryScheduling';
 
 export default function CheckoutWizard({
   cart,
@@ -41,9 +42,32 @@ export default function CheckoutWizard({
   const [searchLoading, setSearchLoading] = useState(false);
   const debounceRef = useRef(null);
 
+  // Delivery Scheduling & Operating Hours State
+  const [orderSchedule, setOrderSchedule] = useState({ type: 'asap' });
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
+
   const DEPOT_LAT = 6.438384;
   const DEPOT_LNG = 3.414441;
   const DEPOT_ADDRESS = "26 Moshalashi Street, Ikoyi Obalende, Lagos";
+
+  // Check store hours in Lagos (WAT / UTC+1)
+  useEffect(() => {
+    const checkLiveHours = () => {
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const lagosHour = (utcHour + 1) % 24;
+      const day = now.getUTCDay(); // 0 is Sunday, 1-6 is Mon-Sat
+
+      const open = day !== 0 && lagosHour >= 9 && lagosHour < 17;
+      setIsStoreOpen(open);
+
+      if (!open) {
+        setOrderSchedule(prev => ({ ...prev, type: 'scheduled', storeClosedNow: true }));
+      }
+    };
+
+    checkLiveHours();
+  }, []);
 
   const calculateGpsDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371; 
@@ -160,6 +184,30 @@ export default function CheckoutWizard({
     }
   };
 
+  const validateScheduleSelection = () => {
+    if (!isStoreOpen || orderSchedule.type === 'scheduled') {
+      if (!orderSchedule.date || !orderSchedule.time) {
+        alert("The kitchen is currently closed for instant dispatch. Please select a valid delivery date (Mon–Sat) and time window before submitting.");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const onWhatsAppSubmit = () => {
+    if (!validateScheduleSelection()) return;
+    if (handleForwardToWhatsApp) {
+      handleForwardToWhatsApp(orderSchedule);
+    }
+  };
+
+  const onInvoiceSubmit = () => {
+    if (!validateScheduleSelection()) return;
+    if (handleDownloadInvoice) {
+      handleDownloadInvoice(orderSchedule);
+    }
+  };
+
   const totalItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -176,7 +224,7 @@ export default function CheckoutWizard({
               <h3 className="text-sm font-black uppercase tracking-wider text-neutral-950">
                 {step === 1 && "Confirm Order Items"}
                 {step === 2 && "Recipient Selection"}
-                {step === 3 && (deliveryMethod === 'pickup' ? "Pickup Logistics" : "Delivery Coordinates")}
+                {step === 3 && (deliveryMethod === 'pickup' ? "Pickup Logistics" : "Delivery Coordinates & Schedule")}
               </h3>
             </div>
             <button 
@@ -352,7 +400,7 @@ export default function CheckoutWizard({
           </div>
         )}
 
-        {/* STEP 3: LOGISTICS METHOD, COORDINATES & PAYMENT ACCOUNT */}
+        {/* STEP 3: LOGISTICS METHOD, COORDINATES, SCHEDULING & PAYMENT ACCOUNT */}
         {step === 3 && (
           <div className="space-y-4 py-1">
             
@@ -365,7 +413,7 @@ export default function CheckoutWizard({
                   onClick={() => setDeliveryMethod('dispatch')}
                   className={`text-center py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${deliveryMethod === 'dispatch' ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}
                 >
-                  🛵 Doorstep Delivery
+                  Doorstep Delivery
                 </button>
                 <button
                   type="button"
@@ -377,7 +425,7 @@ export default function CheckoutWizard({
                   }}
                   className={`text-center py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${deliveryMethod === 'pickup' ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}
                 >
-                  🏪 Self Pickup (Depot)
+                  Self Pickup (Depot)
                 </button>
               </div>
             </div>
@@ -421,12 +469,15 @@ export default function CheckoutWizard({
               </div>
             </div>
 
+            {/* EMBEDDED DELIVERY SCHEDULING COMPONENT WITH HOURS LOCK */}
+            <DeliveryScheduling onScheduleChange={(schedule) => setOrderSchedule(schedule)} />
+
             {/* IF PICKUP METHOD SELECTED: SHOW DEPOT ADDRESS CARD */}
             {deliveryMethod === 'pickup' ? (
               <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1.5">
-                    📍 Self Pickup Depot Address
+                    Self Pickup Depot Address
                   </span>
                   <button
                     type="button"
@@ -440,7 +491,7 @@ export default function CheckoutWizard({
                   {DEPOT_ADDRESS}
                 </p>
                 <p className="text-[10px] text-emerald-700 font-medium italic">
-                  ✓ Delivery fee is ₦0. You can pick up your freshly prepared pack directly at our Obalende kitchen depot once notified.
+                  Delivery fee is ₦0. You can pick up your freshly prepared pack directly at our Obalende kitchen depot once notified.
                 </p>
               </div>
             ) : (
@@ -461,14 +512,14 @@ export default function CheckoutWizard({
                     {detectedKm && (
                       deliveryZone === 'outOfRange' ? (
                         <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-center space-y-1">
-                          <p className="text-xs font-black uppercase">⚠️ Out of Direct Delivery Range ({detectedKm} km)</p>
+                          <p className="text-xs font-black uppercase">Out of Direct Delivery Range ({detectedKm} km)</p>
                           <p className="text-[10px] font-medium leading-relaxed text-red-600">
                             Location exceeds 40 km from our Obalende depot. Please select <strong>"For Someone Else"</strong> to order for a recipient within Lagos, or switch to <strong>"Self Pickup"</strong>.
                           </p>
                         </div>
                       ) : (
                         <p className="text-[10px] text-green-600 font-bold text-center bg-green-50 py-1.5 rounded-lg border border-green-200">
-                          ✓ Location Pinned: {detectedKm} km from Depot (Fee: ₦{currentDeliveryFee.toLocaleString()})
+                          Location Pinned: {detectedKm} km from Depot (Fee: ₦{currentDeliveryFee.toLocaleString()})
                         </p>
                       )
                     )}
@@ -505,7 +556,7 @@ export default function CheckoutWizard({
 
                     {detectedKm && deliveryZone === 'outOfRange' && (
                       <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-center space-y-1 mt-2">
-                        <p className="text-xs font-black uppercase">⚠️ Out of Delivery Range ({detectedKm} km)</p>
+                        <p className="text-xs font-black uppercase">Out of Delivery Range ({detectedKm} km)</p>
                         <p className="text-[10px] font-medium leading-relaxed text-red-600">
                           Selected area exceeds 40 km from our Obalende depot. Please choose an address within Lagos or switch to <strong>"Self Pickup"</strong>.
                         </p>
@@ -554,13 +605,13 @@ export default function CheckoutWizard({
                   </svg>
                   Payment Bank Account (Direct Transfer)
                 </span>
-                <span className="text-[10px] font-black text-neutral-600 uppercase">{BANK_ACCOUNT.bankName}</span>
+                <span className="text-[10px] font-black text-neutral-600 uppercase">{BANK_ACCOUNT?.bankName || 'Access Bank'}</span>
               </div>
 
               <div className="flex justify-between items-center pt-1">
                 <div>
-                  <p className="text-base font-mono font-black text-neutral-900 tracking-wider">{BANK_ACCOUNT.accountNumber}</p>
-                  <p className="text-[11px] font-bold text-neutral-700 uppercase">{BANK_ACCOUNT.accountName}</p>
+                  <p className="text-base font-mono font-black text-neutral-900 tracking-wider">{BANK_ACCOUNT?.accountNumber || '1411762017'}</p>
+                  <p className="text-[11px] font-bold text-neutral-700 uppercase">{BANK_ACCOUNT?.accountName || 'Olamide Adekeye'}</p>
                 </div>
 
                 <button
@@ -577,7 +628,7 @@ export default function CheckoutWizard({
             <div className="grid grid-cols-1 gap-2 pt-2">
               <button 
                 type="button"
-                onClick={handleDownloadInvoice}
+                onClick={onInvoiceSubmit}
                 disabled={deliveryZone === 'outOfRange'}
                 className={`w-full font-black text-xs uppercase tracking-widest p-4 rounded-xl transition-all duration-300 transform active:scale-95 border-2 flex items-center justify-center gap-2 ${deliveryZone === 'outOfRange' ? 'bg-neutral-200 border-neutral-300 text-neutral-400 cursor-not-allowed' : (invoiceGenerated ? 'bg-neutral-100 border-neutral-300 text-neutral-500' : 'bg-white border-neutral-950 text-neutral-950 hover:bg-neutral-50')}`}
               >
@@ -587,7 +638,7 @@ export default function CheckoutWizard({
 
               <button 
                 type="button"
-                onClick={handleForwardToWhatsApp}
+                onClick={onWhatsAppSubmit}
                 disabled={deliveryZone === 'outOfRange'}
                 className={`w-full font-black text-xs uppercase tracking-widest p-4 rounded-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 ${deliveryZone === 'outOfRange' ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed' : 'bg-neutral-950 hover:bg-emerald-600 text-white'}`}
               >
