@@ -4,25 +4,23 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
   const [isOpenNow, setIsOpenNow] = useState(true);
   const [deliveryType, setDeliveryType] = useState('asap');
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('09:00 AM - 11:00 AM');
+  const [selectedTime, setSelectedTime] = useState('10:00 AM - 12:00 PM');
 
   useEffect(() => {
     const checkStatus = () => {
       const now = new Date();
       const utcHour = now.getUTCHours();
       const lagosHour = (utcHour + 1) % 24;
-      const day = now.getUTCDay(); // 0 is Sunday, 1-6 Mon-Sat
 
-      const open = day !== 0 && lagosHour >= 9 && lagosHour < 17;
+      // Open Mon-Sun (Everyday) between 10:00 AM and 5:00 PM
+      const open = lagosHour >= 10 && lagosHour < 17;
       setIsOpenNow(open);
 
       if (!open) {
         setDeliveryType('scheduled');
         const nextDate = new Date();
-        if (day === 0) {
-          nextDate.setDate(nextDate.getDate() + 1); // If Sunday, suggest Monday
-        } else if (lagosHour >= 17) {
-          nextDate.setDate(nextDate.getDate() + 1); // Next day
+        if (lagosHour >= 17) {
+          nextDate.setDate(nextDate.getDate() + 1); // Next day if past 5PM
         }
         const dateStr = nextDate.toISOString().split('T')[0];
         setSelectedDate(dateStr);
@@ -31,7 +29,7 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
           onScheduleChange({
             type: 'scheduled',
             date: dateStr,
-            time: '09:00 AM - 11:00 AM',
+            time: '10:00 AM - 12:00 PM',
             storeClosedNow: true
           });
         }
@@ -47,17 +45,12 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
 
   const handleDateChange = (e) => {
     const val = e.target.value;
-    const dateObj = new Date(val);
-    if (dateObj.getUTCDay() === 0) {
-      alert("Supreme Chops is closed on Sundays. Please choose Monday to Saturday.");
-      return;
-    }
     setSelectedDate(val);
     if (onScheduleChange) {
       onScheduleChange({
         type: 'scheduled',
         date: val,
-        time: selectedTime || '09:00 AM - 11:00 AM'
+        time: selectedTime || '10:00 AM - 12:00 PM'
       });
     }
   };
@@ -75,7 +68,7 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
   };
 
   const handleTypeSwitch = (type) => {
-    if (!isOpenNow && type === 'asap') return; // Strict block
+    if (!isOpenNow && type === 'asap') return;
     setDeliveryType(type);
     if (onScheduleChange) {
       if (type === 'asap') {
@@ -84,7 +77,7 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
         onScheduleChange({
           type: 'scheduled',
           date: selectedDate,
-          time: selectedTime || '09:00 AM - 11:00 AM'
+          time: selectedTime || '10:00 AM - 12:00 PM'
         });
       }
     }
@@ -99,7 +92,7 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
             <span>Kitchen is Currently Closed</span>
           </div>
           <p className="text-zinc-300">
-            Immediate dispatch is closed right now (Active hours: <strong>Mon - Sat, 9:00 AM - 5:00 PM</strong>). Please schedule your delivery slot below.
+            Immediate dispatch is closed right now (Active hours: <strong>Mon - Sun, 10:00 AM - 5:00 PM</strong>). Please schedule your delivery slot below.
           </p>
         </div>
       ) : (
@@ -114,11 +107,10 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
 
       <div className="flex items-center justify-between pt-1">
         <label className="text-sm font-semibold text-zinc-200">Delivery Timing</label>
-        <span className="text-[11px] text-amber-400 font-medium">Mon - Sat (9AM - 5PM)</span>
+        <span className="text-[11px] text-amber-400 font-medium">Mon - Sun (10AM - 5PM)</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {/* Deliver ASAP Button - Hard Locked When Closed */}
         <button
           type="button"
           disabled={!isOpenNow}
@@ -135,7 +127,6 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
           <span>Deliver ASAP {!isOpenNow ? '(Closed)' : ''}</span>
         </button>
 
-        {/* Schedule Slot Button */}
         <button
           type="button"
           onClick={() => handleTypeSwitch('scheduled')}
@@ -153,7 +144,7 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
       {deliveryType === 'scheduled' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           <div>
-            <label className="text-[11px] text-zinc-400 block mb-1">Delivery Date (Mon - Sat)</label>
+            <label className="text-[11px] text-zinc-400 block mb-1">Delivery Date (Mon - Sun)</label>
             <input
               type="date"
               value={selectedDate}
@@ -162,16 +153,16 @@ export const DeliveryScheduling = ({ onScheduleChange }) => {
             />
           </div>
           <div>
-            <label className="text-[11px] text-zinc-400 block mb-1">Time Slot (9AM - 5PM)</label>
+            <label className="text-[11px] text-zinc-400 block mb-1">Time Slot (10AM - 5PM)</label>
             <select
               value={selectedTime}
               onChange={handleTimeChange}
               className="w-full bg-zinc-800 border border-zinc-700 text-xs rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-500"
             >
-              <option value="09:00 AM - 11:00 AM">09:00 AM - 11:00 AM</option>
-              <option value="11:00 AM - 01:00 PM">11:00 AM - 01:00 PM</option>
-              <option value="01:00 PM - 03:00 PM">01:00 PM - 03:00 PM</option>
-              <option value="03:00 PM - 05:00 PM">03:00 PM - 05:00 PM</option>
+              <option value="10:00 AM - 12:00 PM">10:00 AM - 12:00 PM</option>
+              <option value="12:00 PM - 02:00 PM">12:00 PM - 02:00 PM</option>
+              <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM</option>
+              <option value="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</option>
             </select>
           </div>
         </div>

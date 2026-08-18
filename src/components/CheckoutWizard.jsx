@@ -12,7 +12,7 @@ export default function CheckoutWizard({
   setDeliveryZone,
   detectedKm,
   setDetectedKm,
-  BANK_ACCOUNT = { bankName: 'Access Bank', accountNumber: '1411762017', accountName: 'Olamide Adekeye' },
+  BANK_ACCOUNT,
   handleDownloadInvoice,
   handleForwardToWhatsApp,
   isForSelf,
@@ -45,10 +45,43 @@ export default function CheckoutWizard({
   const debounceRef = useRef(null);
 
   const [orderSchedule, setOrderSchedule] = useState({ type: 'asap' });
+  const [activeBranch, setActiveBranch] = useState('obalende');
 
-  const DEPOT_LAT = 6.438384;
-  const DEPOT_LNG = 3.414441;
-  const DEPOT_ADDRESS = "26 Moshalashi Street, Ikoyi Obalende, Lagos";
+  const BRANCHES = {
+    obalende: {
+      name: 'Obalende Branch',
+      lat: 6.438384,
+      lng: 3.414441,
+      address: "26 Moshalashi Street, Ikoyi Obalende, Lagos",
+      whatsapp: "2347081241745",
+      phone: "+234 708 124 1745",
+      bank: {
+        bankName: "Access Bank",
+        accountNumber: "1411762017",
+        accountName: "Olamide Adekeye"
+      }
+    },
+    jakande: {
+      name: 'Jakande Market Branch',
+      lat: 6.446811,
+      lng: 3.516541,
+      address: "1 Resurrection Drive, Jakande Market, Lagos",
+      whatsapp: "2347052316118",
+      phone: "+234 705 231 6118",
+      bank: {
+        bankName: "Moniepoint",
+        accountNumber: "5063852507",
+        accountName: "Supreme Chops International"
+      }
+    }
+  };
+
+  const currentBranch = BRANCHES[activeBranch];
+  const activeBank = currentBranch.bank || BANK_ACCOUNT || {
+    bankName: "Access Bank",
+    accountNumber: "1411762017",
+    accountName: "Olamide Adekeye"
+  };
 
   const calculateGpsDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
@@ -74,6 +107,15 @@ export default function CheckoutWizard({
     return 'outOfRange';
   };
 
+  const handleBranchSwitch = (branchId) => {
+    setActiveBranch(branchId);
+    setDeliveryZone('none');
+    setDetectedKm(null);
+    if (deliveryMethod === 'pickup') {
+      setDeliveryAddress(BRANCHES[branchId].address);
+    }
+  };
+
   const handleAutoDetectFeeOnly = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!navigator.geolocation) {
@@ -87,7 +129,7 @@ export default function CheckoutWizard({
       (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-        const distance = calculateGpsDistance(DEPOT_LAT, DEPOT_LNG, userLat, userLng);
+        const distance = calculateGpsDistance(currentBranch.lat, currentBranch.lng, userLat, userLng);
         const roundedDistance = Math.round(distance * 10) / 10;
         setDetectedKm(roundedDistance);
         setDeliveryZone(determineZoneFromDistance(roundedDistance));
@@ -103,14 +145,14 @@ export default function CheckoutWizard({
 
   const handleCopyBankAccount = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    navigator.clipboard.writeText(BANK_ACCOUNT.accountNumber);
+    navigator.clipboard.writeText(activeBank.accountNumber);
     setCopiedBank(true);
     setTimeout(() => setCopiedBank(false), 2500);
   };
 
   const handleCopyDepotAddress = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    navigator.clipboard.writeText(DEPOT_ADDRESS);
+    navigator.clipboard.writeText(currentBranch.address);
     setCopiedDepot(true);
     setTimeout(() => setCopiedDepot(false), 2500);
   };
@@ -146,7 +188,7 @@ export default function CheckoutWizard({
     if (suggestion.lat && suggestion.lon) {
       const targetLat = parseFloat(suggestion.lat);
       const targetLng = parseFloat(suggestion.lon);
-      const distance = calculateGpsDistance(DEPOT_LAT, DEPOT_LNG, targetLat, targetLng);
+      const distance = calculateGpsDistance(currentBranch.lat, currentBranch.lng, targetLat, targetLng);
       const roundedDistance = Math.round(distance * 10) / 10;
       setDetectedKm(roundedDistance);
       setDeliveryZone(determineZoneFromDistance(roundedDistance));
@@ -173,7 +215,7 @@ export default function CheckoutWizard({
       ctx.fillStyle = '#a3a3a3';
       ctx.font = '14px Arial, sans-serif';
       ctx.fillText('Fresh Small Chops & Finger Foods | Lagos, Nigeria', 50, 100);
-      ctx.fillText('Phone: +234 708 124 1745 | www.supremechops.ng', 50, 122);
+      ctx.fillText(`Branch Phone: ${currentBranch.phone} | www.supremechops.ng`, 50, 122);
       ctx.strokeStyle = '#262626';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -192,14 +234,12 @@ export default function CheckoutWizard({
       ctx.fillText(`Phone: ${customerPhone || 'N/A'}`, 50, 260);
 
       const scheduleInfo = orderSchedule.type === 'scheduled' && orderSchedule.date
-        ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '09:00 AM - 11:00 AM'})`
-        : 'ASAP Dispatch (Mon - Sat 9:00 AM - 5:00 PM)';
+        ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+        : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
-      ctx.fillText(`Fulfillment: ${deliveryMethod === 'pickup' ? 'Self Pickup (Obalende Depot)' : 'Doorstep Delivery'}`, 420, 210);
-      ctx.fillText(`Timing: ${scheduleInfo}`, 420, 235);
-      if (deliveryMethod === 'dispatch' && deliveryAddress) {
-        ctx.fillText(`Address: ${deliveryAddress.substring(0, 35)}...`, 420, 260);
-      }
+      ctx.fillText(`Processing Kitchen: ${currentBranch.name}`, 420, 210);
+      ctx.fillText(`Fulfillment: ${deliveryMethod === 'pickup' ? 'Self Pickup' : 'Doorstep Delivery'}`, 420, 235);
+      ctx.fillText(`Timing: ${scheduleInfo}`, 420, 260);
 
       ctx.fillStyle = '#171717';
       ctx.fillRect(50, 290, 700, 36);
@@ -257,13 +297,13 @@ export default function CheckoutWizard({
       ctx.strokeRect(50, currentY, 700, 100);
       ctx.fillStyle = '#ea580c';
       ctx.font = 'bold 13px Arial, sans-serif';
-      ctx.fillText('OFFICIAL PAYMENT BANK ACCOUNT (DIRECT TRANSFER)', 70, currentY + 30);
+      ctx.fillText(`PAYMENT ACCOUNT (${currentBranch.name.toUpperCase()})`, 70, currentY + 30);
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 15px Arial, sans-serif';
-      ctx.fillText(`Bank: ${BANK_ACCOUNT.bankName} | Account No: ${BANK_ACCOUNT.accountNumber}`, 70, currentY + 58);
+      ctx.fillText(`Bank: ${activeBank.bankName} | Account No: ${activeBank.accountNumber}`, 70, currentY + 58);
       ctx.font = '13px Arial, sans-serif';
       ctx.fillStyle = '#a3a3a3';
-      ctx.fillText(`Account Name: ${BANK_ACCOUNT.accountName}`, 70, currentY + 82);
+      ctx.fillText(`Account Name: ${activeBank.accountName}`, 70, currentY + 82);
 
       ctx.fillStyle = '#737373';
       ctx.font = '12px Arial, sans-serif';
@@ -275,7 +315,7 @@ export default function CheckoutWizard({
           const blobUrl = URL.createObjectURL(blob);
           const downloadLink = document.createElement('a');
           downloadLink.href = blobUrl;
-          downloadLink.download = `SupremeChops_Invoice_${Date.now()}.png`;
+          downloadLink.download = `SupremeChops_${activeBranch}_Invoice_${Date.now()}.png`;
           document.body.appendChild(downloadLink);
           downloadLink.click();
           document.body.removeChild(downloadLink);
@@ -294,19 +334,9 @@ export default function CheckoutWizard({
   const onWhatsAppSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    if (!customerName?.trim() || !customerPhone?.trim()) {
-      alert("Please enter your name and contact phone number before submitting.");
-      return;
-    }
-
-    if (deliveryMethod === 'dispatch' && !deliveryAddress?.trim()) {
-      alert("Please enter your full delivery address.");
-      return;
-    }
-
     const scheduleStr = orderSchedule.type === 'scheduled' && orderSchedule.date
-      ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '09:00 AM - 11:00 AM'})`
-      : 'ASAP Dispatch (Mon - Sat 9:00 AM - 5:00 PM)';
+      ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+      : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
     const itemsText = cart.map(item => `• ${item.name} x${item.quantity} (N${(item.price * item.quantity).toLocaleString()})`).join('\n');
     const subtotalVal = typeof calculateSubtotal === 'function' ? calculateSubtotal() : 0;
@@ -316,17 +346,20 @@ export default function CheckoutWizard({
       `------------------------------------\n` +
       `*Name:* ${customerName}\n` +
       `*Phone:* ${customerPhone}\n` +
-      `*Fulfillment:* ${deliveryMethod === 'pickup' ? 'Self Pickup (Obalende Depot)' : `Delivery to: ${deliveryAddress}`}\n` +
+      `*Processing Kitchen:* ${currentBranch.name}\n` +
+      `*Fulfillment:* ${deliveryMethod === 'pickup' ? 'Self Pickup' : `Delivery to: ${deliveryAddress}`}\n` +
       `*Timing:* ${scheduleStr}\n\n` +
       `*ITEMS:*\n${itemsText}\n\n` +
       `*Subtotal:* N${subtotalVal.toLocaleString()}\n` +
       `*Fulfillment Fee:* ${deliveryMethod === 'pickup' ? 'FREE' : `N${currentDeliveryFee.toLocaleString()}`}\n` +
       `*GRAND TOTAL:* N${totalVal.toLocaleString()}\n` +
+      `------------------------------------\n` +
+      `*Payment Account:* ${activeBank.bankName} - ${activeBank.accountNumber} (${activeBank.accountName})\n` +
       (deliveryNotes ? `*Notes:* ${deliveryNotes}\n` : '') +
       `------------------------------------\n` +
       `_Order submitted via www.supremechops.ng_`;
 
-    window.open(`https://wa.me/2347081241745?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/${currentBranch.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const totalItemCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -340,12 +373,15 @@ export default function CheckoutWizard({
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center gap-2">
               <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
-                Step {step} of 3
+                Step {step} of 6
               </span>
               <h3 className="text-sm font-black uppercase tracking-wider text-neutral-950">
-                {step === 1 && "Confirm Order Items"}
+                {step === 1 && "Order Items"}
                 {step === 2 && "Recipient Selection"}
-                {step === 3 && (deliveryMethod === 'pickup' ? "Pickup Logistics" : "Delivery Coordinates & Schedule")}
+                {step === 3 && "Processing Kitchen"}
+                {step === 4 && "Fulfillment"}
+                {step === 5 && "Contact Details"}
+                {step === 6 && "Scheduling & Payment"}
               </h3>
             </div>
             <button 
@@ -358,9 +394,9 @@ export default function CheckoutWizard({
           </div>
 
           <div className="flex gap-2 pt-3">
-            <div className={`h-1.5 flex-1 rounded-full transition-all ${step >= 1 ? 'bg-orange-600' : 'bg-neutral-200'}`} />
-            <div className={`h-1.5 flex-1 rounded-full transition-all ${step >= 2 ? 'bg-orange-600' : 'bg-neutral-200'}`} />
-            <div className={`h-1.5 flex-1 rounded-full transition-all ${step >= 3 ? 'bg-orange-600' : 'bg-neutral-200'}`} />
+            {[1, 2, 3, 4, 5, 6].map((s) => (
+              <div key={s} className={`h-1.5 flex-1 rounded-full transition-all ${step >= s ? 'bg-orange-600' : 'bg-neutral-200'}`} />
+            ))}
           </div>
         </div>
 
@@ -491,7 +527,7 @@ export default function CheckoutWizard({
                   setIsForSelf(false);
                   setStep(3);
                 }}
-                className={`p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between group ${!isForSelf ? 'border-orange-500 bg-orange-50/40' : 'border-neutral-200 hover:border-neutral-300'}`}
+                className={`p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between group ${!isForSelf === true ? 'border-orange-500 bg-orange-50/40' : 'border-neutral-200 hover:border-neutral-300'}`}
               >
                 <div>
                   <p className="font-extrabold text-sm text-neutral-900 uppercase">For Someone Else</p>
@@ -513,8 +549,62 @@ export default function CheckoutWizard({
           </div>
         )}
 
-        {/* STEP 3: LOGISTICS & ACTIONS */}
+        {/* STEP 3: KITCHEN BRANCH */}
         {step === 3 && (
+          <div className="space-y-5 py-4">
+            <h4 className="text-sm font-black text-neutral-900 uppercase tracking-tight text-center">
+              Processing Kitchen
+            </h4>
+            <p className="text-[11px] text-center text-neutral-500 pb-2">Which branch is closest to the fulfillment location?</p>
+
+            <div className="grid grid-cols-1 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  handleBranchSwitch('obalende');
+                  setStep(4);
+                }}
+                className={`p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between group ${activeBranch === 'obalende' ? 'border-orange-500 bg-orange-50/40' : 'border-neutral-200 hover:border-neutral-300'}`}
+              >
+                <div>
+                  <p className="font-extrabold text-sm text-neutral-900 uppercase">Obalende Branch</p>
+                  <p className="text-[11px] text-neutral-500 font-medium pt-1">{BRANCHES.obalende.address}</p>
+                </div>
+                <div className="w-6 h-6 rounded-full border-2 border-orange-500 flex items-center justify-center text-orange-600 font-bold text-xs">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleBranchSwitch('jakande');
+                  setStep(4);
+                }}
+                className={`p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between group ${activeBranch === 'jakande' ? 'border-orange-500 bg-orange-50/40' : 'border-neutral-200 hover:border-neutral-300'}`}
+              >
+                <div>
+                  <p className="font-extrabold text-sm text-neutral-900 uppercase">Jakande Market Branch</p>
+                  <p className="text-[11px] text-neutral-500 font-medium pt-1">{BRANCHES.jakande.address}</p>
+                </div>
+                <div className="w-6 h-6 rounded-full border-2 border-orange-500 flex items-center justify-center text-orange-600 font-bold text-xs">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                </div>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="w-full bg-neutral-100 text-neutral-600 font-bold text-xs uppercase tracking-wider p-3 rounded-xl hover:bg-neutral-200"
+            >
+              ← Back
+            </button>
+          </div>
+        )}
+
+        {/* STEP 4: FULFILLMENT METHOD & LOCATION */}
+        {step === 4 && (
           <div className="space-y-4 py-1">
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Fulfillment Method</label>
@@ -533,64 +623,22 @@ export default function CheckoutWizard({
                     setDeliveryMethod('pickup');
                     setDeliveryZone('none');
                     setDetectedKm(null);
-                    setDeliveryAddress(DEPOT_ADDRESS);
+                    setDeliveryAddress(currentBranch.address);
                   }}
                   className={`text-center py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 ${deliveryMethod === 'pickup' ? 'bg-white text-orange-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}
                 >
                   <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>
-                  <span>Self Pickup (Depot)</span>
+                  <span>Self Pickup</span>
                 </button>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
-                {isForSelf ? 'Full Name' : "Recipient's Full Name"}
-              </label>
-              <input 
-                required
-                type="text" 
-                placeholder="Enter full name..." 
-                className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
-                value={customerName}
-                onChange={e => setCustomerName(e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Contact Phone</label>
-                <input 
-                  required
-                  type="tel" 
-                  placeholder="Enter phone number..." 
-                  className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Alternative No</label>
-                <input 
-                  type="tel" 
-                  placeholder="Optional" 
-                  className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
-                  value={altPhone}
-                  onChange={e => setAltPhone(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Delivery Timing */}
-            <DeliveryScheduling onScheduleChange={(schedule) => setOrderSchedule(schedule)} />
-
-            {/* Location */}
             {deliveryMethod === 'pickup' ? (
               <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
                     <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                    Self Pickup Depot Address
+                    {currentBranch.name} Address
                   </span>
                   <button
                     type="button"
@@ -601,13 +649,12 @@ export default function CheckoutWizard({
                   </button>
                 </div>
                 <p className="text-xs font-extrabold text-neutral-800">
-                  {DEPOT_ADDRESS}
+                  {currentBranch.address}
                 </p>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  
                   {isForSelf && (
                     <button 
                       type="button"
@@ -615,7 +662,7 @@ export default function CheckoutWizard({
                       className="w-full border border-orange-500 bg-orange-50/50 hover:bg-orange-50 text-orange-600 font-black text-[11px] uppercase p-3 rounded-xl flex items-center justify-center gap-2"
                     >
                       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-                      <span>{gpsLoading ? 'Pinning Location Coordinates...' : 'Pin My Live Location for Delivery'}</span>
+                      <span>{gpsLoading ? 'Pinning Location...' : 'Pin My Live Location for Delivery'}</span>
                     </button>
                   )}
 
@@ -651,12 +698,12 @@ export default function CheckoutWizard({
                       <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-center space-y-1 mt-2">
                         <p className="text-xs font-black uppercase">Out of Delivery Range ({detectedKm} km)</p>
                         <p className="text-[10px] font-medium leading-relaxed text-red-600">
-                          Selected area exceeds 40 km from our Obalende depot. Please choose an address within Lagos or switch to <strong>"Self Pickup"</strong>.
+                          Selected area exceeds 40 km from the {currentBranch.name}. Try switching branches in Step 3 or choose <strong>"Self Pickup"</strong>.
                         </p>
                       </div>
                     ) : (
                       <p className="text-[10px] text-green-600 font-bold text-center bg-green-50 py-1.5 rounded-lg border border-green-200">
-                        {isForSelf ? 'Location Pinned:' : 'Recipient Area Found:'} {detectedKm} km from Depot (Fee: ₦{currentDeliveryFee.toLocaleString()})
+                        {isForSelf ? 'Location Pinned:' : 'Recipient Area Found:'} {detectedKm} km from {currentBranch.name} (Fee: ₦{currentDeliveryFee.toLocaleString()})
                       </p>
                     )
                   )}
@@ -678,32 +725,130 @@ export default function CheckoutWizard({
               </>
             )}
 
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="w-1/3 bg-neutral-100 text-neutral-600 font-bold text-xs uppercase tracking-wider p-3 rounded-xl hover:bg-neutral-200"
+              >
+                ← Back
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (deliveryMethod === 'dispatch' && !deliveryAddress?.trim()) {
+                    alert("Please enter the full delivery street address.");
+                    return;
+                  }
+                  setStep(5);
+                }}
+                className="w-2/3 bg-neutral-950 hover:bg-orange-600 text-white font-black text-xs uppercase tracking-widest p-3 rounded-xl transition-all"
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: CONTACT DETAILS */}
+        {step === 5 && (
+          <div className="space-y-4 py-1">
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
-                Special Delivery Notes
+                {isForSelf ? 'Full Name' : "Recipient's Full Name"} <span className="text-orange-500">*</span>
+              </label>
+              <input 
+                required
+                type="text" 
+                placeholder="Enter full name..." 
+                className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
+                value={customerName}
+                onChange={e => setCustomerName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Contact Phone <span className="text-orange-500">*</span></label>
+                <input 
+                  required
+                  type="tel" 
+                  placeholder="Enter phone number..." 
+                  className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">Alternative No</label>
+                <input 
+                  type="tel" 
+                  placeholder="Optional" 
+                  className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
+                  value={altPhone}
+                  onChange={e => setAltPhone(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400">
+                Special Order / Delivery Notes
               </label>
               <input 
                 type="text" 
-                placeholder="e.g. Call when outside, leave at gate" 
+                placeholder="e.g. Call when outside, extra spicy, leave at gate" 
                 className="w-full border border-neutral-200/80 bg-neutral-50 text-xs p-3 rounded-xl focus:outline-none font-medium"
                 value={deliveryNotes}
                 onChange={e => setDeliveryNotes(e.target.value)}
               />
             </div>
 
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="w-1/3 bg-neutral-100 text-neutral-600 font-bold text-xs uppercase tracking-wider p-3 rounded-xl hover:bg-neutral-200"
+              >
+                ← Back
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!customerName?.trim() || !customerPhone?.trim()) {
+                    alert("Please enter a name and contact phone number.");
+                    return;
+                  }
+                  setStep(6);
+                }}
+                className="w-2/3 bg-neutral-950 hover:bg-orange-600 text-white font-black text-xs uppercase tracking-widest p-3 rounded-xl transition-all"
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: SCHEDULING & PAYMENT */}
+        {step === 6 && (
+          <div className="space-y-4 py-1">
+            
+            {/* Delivery Timing */}
+            <DeliveryScheduling onScheduleChange={(schedule) => setOrderSchedule(schedule)} />
+
             {/* Bank Transfer Details */}
             <div className="bg-orange-50/90 border border-orange-200 rounded-2xl p-4 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase text-orange-700 flex items-center gap-1">
                   <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M4 10h16v2H4zm0 4h16v2H4zm0-8h16v2H4zm-2 14h20V4H2v16zm2-14h16v12H4V6z"/></svg>
-                  Bank Transfer Account
+                  Bank Transfer Account ({currentBranch.name})
                 </span>
-                <span className="text-[10px] font-black text-neutral-600 uppercase">{BANK_ACCOUNT?.bankName}</span>
+                <span className="text-[10px] font-black text-neutral-600 uppercase">{activeBank.bankName}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
                 <div>
-                  <p className="text-base font-mono font-black text-neutral-900">{BANK_ACCOUNT?.accountNumber}</p>
-                  <p className="text-[11px] font-bold text-neutral-700 uppercase">{BANK_ACCOUNT?.accountName}</p>
+                  <p className="text-base font-mono font-black text-neutral-900">{activeBank.accountNumber}</p>
+                  <p className="text-[11px] font-bold text-neutral-700 uppercase">{activeBank.accountName}</p>
                 </div>
                 <button
                   type="button"
@@ -715,13 +860,13 @@ export default function CheckoutWizard({
               </div>
             </div>
 
-            {/* INVOICE DOWNLOADED NOTIFICATION TOAST */}
+            {/* INVOICE NOTIFICATION */}
             {showInvoiceNotification && (
               <div className="bg-emerald-950/90 border border-emerald-500/50 rounded-2xl p-4 text-white shadow-xl space-y-2 animate-fade-in">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <p className="text-xs font-bold text-emerald-300">Invoice Image Downloaded Successfully!</p>
+                    <p className="text-xs font-bold text-emerald-300">Invoice Downloaded Successfully!</p>
                   </div>
                   <button 
                     type="button"
@@ -748,7 +893,7 @@ export default function CheckoutWizard({
               </div>
             )}
 
-            {/* Primary Action Buttons */}
+            {/* Actions */}
             <div className="grid grid-cols-1 gap-2 pt-2">
               <button 
                 type="button"
@@ -757,7 +902,7 @@ export default function CheckoutWizard({
                 className="w-full font-black text-xs uppercase tracking-widest p-4 rounded-xl border-2 bg-white border-neutral-950 text-neutral-950 hover:bg-neutral-50 transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                <span>{downloadingInvoice ? 'Generating Image Invoice...' : 'Download Image Invoice'}</span>
+                <span>{downloadingInvoice ? 'Generating Invoice...' : 'Download Image Invoice'}</span>
               </button>
 
               <button 
@@ -771,7 +916,7 @@ export default function CheckoutWizard({
 
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => setStep(5)}
                 className="w-full text-neutral-400 font-bold text-xs uppercase tracking-wider py-2"
               >
                 ← Back

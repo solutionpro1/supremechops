@@ -9,9 +9,8 @@ export const HoursNoticeModal = () => {
     const now = new Date();
     const utcHour = now.getUTCHours();
     const lagosHour = (utcHour + 1) % 24;
-    const day = now.getUTCDay();
 
-    const open = day !== 0 && lagosHour >= 9 && lagosHour < 17;
+    const open = lagosHour >= 10 && lagosHour < 17;
     setIsStoreOpen(open);
 
     if (!hasSeenNotice) {
@@ -57,7 +56,7 @@ export const HoursNoticeModal = () => {
         <div className="space-y-2.5 text-xs text-neutral-300 leading-relaxed bg-neutral-900/60 p-4 rounded-2xl border border-neutral-800">
           <div className="flex justify-between items-center pb-2 border-b border-neutral-800 text-[11px]">
             <span className="text-neutral-400">Kitchen Schedule:</span>
-            <span className="font-bold text-orange-400">Mon - Sat (9:00 AM - 5:00 PM)</span>
+            <span className="font-bold text-orange-400">Mon - Sun (10:00 AM - 5:00 PM)</span>
           </div>
 
           {!isStoreOpen ? (
