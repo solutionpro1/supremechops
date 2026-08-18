@@ -47,6 +47,7 @@ export default function CheckoutWizard({
   const [orderSchedule, setOrderSchedule] = useState({ type: 'asap' });
   const [activeBranch, setActiveBranch] = useState('obalende');
 
+  // URGENT FIX: Both branches now correctly route to Moniepoint accounts!
   const BRANCHES = {
     obalende: {
       name: 'Obalende Branch',
@@ -56,9 +57,9 @@ export default function CheckoutWizard({
       whatsapp: "2347081241745",
       phone: "+234 708 124 1745",
       bank: {
-        bankName: "Access Bank",
-        accountNumber: "1411762017",
-        accountName: "Olamide Adekeye"
+        bankName: "Moniepoint",
+        accountNumber: "6716087077",
+        accountName: "Supreme Chops International"
       }
     },
     jakande: {
@@ -77,11 +78,7 @@ export default function CheckoutWizard({
   };
 
   const currentBranch = BRANCHES[activeBranch];
-  const activeBank = currentBranch.bank || BANK_ACCOUNT || {
-    bankName: "Access Bank",
-    accountNumber: "1411762017",
-    accountName: "Olamide Adekeye"
-  };
+  const activeBank = currentBranch.bank || BANK_ACCOUNT;
 
   const calculateGpsDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
