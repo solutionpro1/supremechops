@@ -97,17 +97,18 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
   };
 
   return (
-    <div id="menu-catalog" className="space-y-6 scroll-mt-28">
+    <div id="menu-catalog" className="space-y-4 pt-2">
+      
       {/* PERSISTENT STICKY CATEGORY HEADER BAR */}
       <div className="sticky top-20 z-40 bg-neutral-50/95 backdrop-blur-md py-3 border-b border-neutral-200/80">
-        <div className="flex gap-2 p-1.5 bg-neutral-100/90 rounded-2xl border border-neutral-200/60 shadow-sm">
+        <div className="flex gap-2 p-1.5 bg-neutral-100/90 rounded-2xl border border-neutral-200/60 shadow-sm overflow-x-auto no-scrollbar">
           {tabs.map((tab, index) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id, index)}
-                className={`flex-1 whitespace-nowrap text-xs font-black uppercase tracking-wider py-3.5 px-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
+                className={`flex-1 whitespace-nowrap text-[11px] sm:text-xs font-black uppercase tracking-wider py-3.5 px-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
                   isActive
                     ? 'bg-white text-orange-600 shadow-md scale-[1.01]'
                     : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
@@ -120,23 +121,24 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* HORIZONTAL SWIPEABLE CONTAINER WITH UNBLOCKED VERTICAL TOUCH SCROLLING */}
+      {/* INDEPENDENT VERTICAL SCROLL + HORIZONTAL SWIPE CONTAINER */}
+      {/* Notice the fixed height (h-[75vh]) which prevents the empty space issue! */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar w-full touch-pan-y"
+        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar w-full h-[75vh]"
         style={{ 
           scrollSnapType: 'x mandatory',
           touchAction: 'pan-y pan-x'
         }}
       >
         {/* PANEL 1: Platters & Packs */}
-        <div className="w-full shrink-0 snap-start pr-1">
+        <div className="w-full h-full shrink-0 snap-start overflow-y-auto pb-32 pr-1 no-scrollbar">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {menuItems.packs.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white border border-neutral-200/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-orange-500/60 hover:shadow-xl hover:-translate-y-1"
+                className="group bg-white border border-neutral-200/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-orange-500/60 shadow-sm hover:shadow-xl"
               >
                 <div className="h-44 w-full relative overflow-hidden bg-neutral-100">
                   <img 
@@ -180,26 +182,26 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
         </div>
 
         {/* PANEL 2: Customize Pack */}
-        <div className="w-full shrink-0 snap-start px-1">
+        <div className="w-full h-full shrink-0 snap-start overflow-y-auto pb-32 px-1 no-scrollbar">
           <div className="bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
             <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
-              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Customize Item & Thumbnail</span>
-              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price & Add</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-neutral-400 tracking-wider">Item & Thumbnail</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-neutral-400 tracking-wider">Price & Add</span>
             </div>
 
             <div className="divide-y divide-neutral-100">
               {menuItems.customize.map((item) => (
-                <div key={item.id} className="py-3.5 flex items-center justify-between gap-4 hover:bg-orange-50/40 px-2 sm:px-3 rounded-2xl transition-colors">
-                  <div className="flex items-center gap-3">
+                <div key={item.id} className="py-3.5 flex items-center justify-between gap-2 sm:gap-4 hover:bg-orange-50/40 px-2 sm:px-3 rounded-2xl transition-colors">
+                  <div className="flex items-center gap-3 overflow-hidden pr-2">
                     <img 
                       src={item.image} 
                       alt={item.name}
                       className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-neutral-200 shrink-0 shadow-sm"
                       loading="lazy"
                     />
-                    <div>
-                      <h4 className="font-extrabold text-xs sm:text-sm text-neutral-900">{item.name}</h4>
-                      <span className="font-mono text-[11px] font-black text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block mt-1">
+                    <div className="truncate">
+                      <h4 className="font-extrabold text-[11px] sm:text-sm text-neutral-900 truncate">{item.name}</h4>
+                      <span className="font-mono text-[10px] sm:text-[11px] font-black text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block mt-1">
                         ₦{item.price.toLocaleString()}
                       </span>
                     </div>
@@ -207,9 +209,9 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
 
                   <button
                     onClick={(e) => onAddToCart(item, 'customize', e)}
-                    className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm shrink-0"
+                    className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3 sm:px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm shrink-0"
                   >
-                    <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 fill-current hidden sm:block" viewBox="0 0 24 24">
                       <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                     </svg>
                     <span>Add</span>
@@ -221,31 +223,31 @@ export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {
         </div>
 
         {/* PANEL 3: Frozen Chops */}
-        <div className="w-full shrink-0 snap-start pl-1">
+        <div className="w-full h-full shrink-0 snap-start overflow-y-auto pb-32 pl-1 no-scrollbar">
           <div className="bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
             <div className="border-b border-neutral-100 pb-3 mb-4 flex justify-between items-center">
-              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Frozen Item Name</span>
-              <span className="text-xs font-black uppercase text-neutral-400 tracking-wider">Unit Price</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-neutral-400 tracking-wider">Frozen Item</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase text-neutral-400 tracking-wider">Price</span>
             </div>
 
             <div className="divide-y divide-neutral-100">
               {menuItems.frozen.map((item) => (
                 <div key={item.id} className="py-3.5 flex justify-between items-center gap-4 hover:bg-orange-50/40 px-2 sm:px-3 rounded-xl transition-colors">
-                  <div>
-                    <h4 className="font-extrabold text-xs sm:text-sm text-neutral-900">{item.name}</h4>
-                    <p className="text-[10px] text-neutral-400 font-medium mt-0.5">Ready for deep-fry / home preparation</p>
+                  <div className="overflow-hidden pr-2">
+                    <h4 className="font-extrabold text-[11px] sm:text-sm text-neutral-900 truncate">{item.name}</h4>
+                    <p className="text-[9px] sm:text-[10px] text-neutral-400 font-medium mt-0.5 truncate">Ready for deep-fry</p>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-mono text-[11px] font-black text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <span className="font-mono text-[10px] sm:text-[11px] font-black text-orange-600 bg-orange-50 px-2 sm:px-2.5 py-1 rounded-lg border border-orange-100">
                       ₦{item.price.toLocaleString()}
                     </span>
 
                     <button
                       onClick={(e) => onAddToCart(item, 'frozen', e)}
-                      className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3.5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm"
+                      className="bg-neutral-900 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest px-3 sm:px-3.5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 transform active:scale-95 shadow-sm"
                     >
-                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 fill-current hidden sm:block" viewBox="0 0 24 24">
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                       </svg>
                       <span>Add</span>
