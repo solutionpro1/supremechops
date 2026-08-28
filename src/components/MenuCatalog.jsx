@@ -1,11 +1,7 @@
 ﻿import React, { useRef } from 'react';
 
 const getAssetImage = (fileName) => {
-  try {
-    return new URL(`../assets/${fileName}`, import.meta.url).href;
-  } catch (e) {
-    return 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80';
-  }
+  return `/images/${fileName}`;
 };
 
 export default function MenuCatalog({ onAddToCart, activeTab, setActiveTab }) {

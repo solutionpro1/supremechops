@@ -8,8 +8,6 @@ import FloatingSocials from './FloatingSocials';
 import CheckoutWizard from './CheckoutWizard';
 import { HoursNoticeModal } from './HoursNoticeModal';
 
-import logoPng from '../assets/logo.png';
-
 export default function SupremeChopsOrder() {
   const [currentPage, setCurrentPage] = useState('menu');
   const [siteLoading, setSiteLoading] = useState(true);
@@ -376,7 +374,7 @@ export default function SupremeChopsOrder() {
   if (siteLoading) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <img src={logoPng} alt="Supreme Chops" className="w-28 h-28 object-contain animate-pulse drop-shadow-2xl" />
+        <img src="/images/logo.png" alt="Supreme Chops" className="w-28 h-28 object-contain animate-pulse drop-shadow-2xl" />
       </div>
     );
   }
@@ -389,7 +387,7 @@ export default function SupremeChopsOrder() {
       {/* PAGE SWITCH TRANSITION OVERLAY */}
       {transitioning && (
         <div className="fixed inset-0 bg-neutral-950/90 backdrop-blur-xl z-[200] flex items-center justify-center transition-opacity duration-300">
-          <img src={logoPng} alt="Supreme Chops" className="w-24 h-24 object-contain animate-pulse" />
+          <img src="/images/logo.png" alt="Supreme Chops" className="w-24 h-24 object-contain animate-pulse" />
         </div>
       )}
 
@@ -416,7 +414,7 @@ export default function SupremeChopsOrder() {
               onClick={() => handleNavClick('home')}
               className="flex items-center gap-3 cursor-pointer"
             >
-              <img src={logoPng} alt="Supreme Chops Logo" className="w-12 h-12 object-contain" />
+              <img src="/images/logo.png" alt="Supreme Chops Logo" className="w-12 h-12 object-contain" />
               <div>
                 <h1 className="text-lg font-black text-neutral-900 tracking-tight leading-none uppercase">SUPREME CHOPS</h1>
                 <p className="text-[9px] font-black tracking-widest text-orange-600 uppercase mt-1">International</p>
@@ -470,7 +468,7 @@ export default function SupremeChopsOrder() {
               <div>
                 <div className="flex justify-between items-center border-b border-neutral-800 pb-4">
                   <div className="flex items-center gap-2">
-                    <img src={logoPng} alt="Logo" className="w-8 h-8 object-contain" />
+                    <img src="/images/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
                     <span className="font-black text-sm uppercase tracking-wider text-white">Supreme Chops</span>
                   </div>
                   <button 
@@ -645,7 +643,7 @@ export default function SupremeChopsOrder() {
       <footer className="bg-neutral-950 text-neutral-400 text-xs py-16 mt-32 border-t border-neutral-900 relative z-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="space-y-4">
-            <img src={logoPng} alt="Supreme Chops" className="w-12 h-12 object-contain bg-white rounded-xl p-1" />
+            <img src="/images/logo.png" alt="Supreme Chops" className="w-12 h-12 object-contain bg-white rounded-xl p-1" />
             <h4 className="text-white font-black text-base uppercase">Supreme Chops</h4>
             <p className="text-neutral-500 leading-relaxed text-[13px]"> Premium gourmet catering across Lagos state. </p>
           </div>
