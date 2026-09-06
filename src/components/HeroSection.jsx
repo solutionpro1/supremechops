@@ -1,8 +1,23 @@
 ﻿import React from 'react';
 
 export default function HeroSection({ onNavigateToCustomize, onSelectLocation }) {
+  // We split the phrase into an array of letters to animate them individually
+  const bouncingText = "HOT, CRISPY".split("");
+
   return (
     <section className="relative bg-neutral-950 text-white pt-12 pb-20 px-6 overflow-hidden">
+      
+      {/* INJECTED CUSTOM ANIMATIONS FOR MOBILE KINETIC TEXT */}
+      <style>{`
+        @keyframes bounceLetter {
+          0%, 100% { transform: translateY(0); color: inherit; }
+          50% { transform: translateY(-12px); color: #f59e0b; } /* Bounces up and flashes amber */
+        }
+        .animate-bounce-letter {
+          animation: bounceLetter 1.5s ease-in-out infinite;
+        }
+      `}</style>
+
       {/* Background Glow Effects */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -14,9 +29,22 @@ export default function HeroSection({ onNavigateToCustomize, onSelectLocation })
           <span>Freshly Made Gourmet Small Chops in Lagos</span>
         </div>
 
-        {/* Big Foodie Headline */}
+        {/* INTERACTIVE KINETIC HEADLINE */}
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight uppercase font-foody">
-          Craving Hot, Crispy <br />
+          Craving{' '}
+          {/* Bouncing "HOT, CRISPY" Letters */}
+          <span className="inline-flex whitespace-pre">
+            {bouncingText.map((char, i) => (
+              <span 
+                key={i} 
+                className={char.trim() ? "animate-bounce-letter inline-block" : "inline-block w-2 sm:w-4"} 
+                style={char.trim() ? { animationDelay: `${i * 0.1}s` } : {}}
+              >
+                {char}
+              </span>
+            ))}
+          </span>
+          <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-400 to-orange-400">
             Small Chops?
           </span>

@@ -47,7 +47,6 @@ export default function CheckoutWizard({
   const [orderSchedule, setOrderSchedule] = useState({ type: 'asap' });
   const [activeBranch, setActiveBranch] = useState('obalende');
 
-  // URGENT FIX: Both branches now correctly route to Moniepoint accounts!
   const BRANCHES = {
     obalende: {
       name: 'Obalende Branch',
@@ -730,12 +729,24 @@ export default function CheckoutWizard({
               >
                 ← Back
               </button>
+              
+              {/* URGENT FIX: VALIDATION ADDED HERE */}
               <button
                 type="button"
                 onClick={() => {
-                  if (deliveryMethod === 'dispatch' && !deliveryAddress?.trim()) {
-                    alert("Please enter the full delivery street address.");
-                    return;
+                  if (deliveryMethod === 'dispatch') {
+                    if (!detectedKm || deliveryZone === 'none') {
+                      alert("Please calculate the delivery fee first by pinning your location or selecting the delivery area from the search list.");
+                      return;
+                    }
+                    if (deliveryZone === 'outOfRange') {
+                      alert("Sorry, the selected location exceeds our 40km delivery radius. Please choose Self Pickup or switch processing branches.");
+                      return;
+                    }
+                    if (!deliveryAddress?.trim()) {
+                      alert("Please enter the full delivery street address.");
+                      return;
+                    }
                   }
                   setStep(5);
                 }}
