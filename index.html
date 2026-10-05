@@ -1,37 +1,40 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <!-- 1. The Favicon (Google looks for sizes multiple of 48px) -->
-  <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="/images/logo.png" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Order premium finger foods, party platters, and custom snack packs delivered fresh across Lagos." />
-  <title>Supreme Chops International</title>
+  <head>
+    <meta charset="UTF-8" />
+    
+    <!-- Force Absolute URLs for Googlebot Favicon Crawler -->
+    <link rel="icon" href="https://supremechops.ng/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="https://supremechops.ng/images/logo.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="https://supremechops.ng/images/logo.png" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Order premium finger foods, party platters, and custom snack packs delivered fresh across Lagos." />
+    <title>Supreme Chops International</title>
 
-  <!-- 2. Google Structured Data (Tells Google exactly what your business and logo are) -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FoodEstablishment",
-      "name": "Supreme Chops International",
-      "image": "https://supremechops.ng/images/logo.png",
-      "logo": "https://supremechops.ng/images/logo.png",
-      "url": "https://supremechops.ng",
-      "telephone": "+2347081241745",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "26 Moshalashi Street, Ikoyi",
-        "addressLocality": "Obalende",
-        "addressRegion": "Lagos",
-        "addressCountry": "NG"
+    <!-- Google Structured Data for Business Logo & Info -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FoodEstablishment",
+        "name": "Supreme Chops International",
+        "image": "https://supremechops.ng/images/logo.png",
+        "logo": "https://supremechops.ng/images/logo.png",
+        "url": "https://supremechops.ng",
+        "telephone": "+2347081241745",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "26 Moshalashi Street, Ikoyi",
+          "addressLocality": "Obalende",
+          "addressRegion": "Lagos",
+          "addressCountry": "NG"
+        }
       }
-    }
-  </script>
-</head>
+    </script>
+  </head>
   <body>
     <div id="root"></div>
+    <!-- Vite React Entry Point -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
