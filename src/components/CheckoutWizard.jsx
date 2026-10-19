@@ -79,6 +79,39 @@ export default function CheckoutWizard({
   const currentBranch = BRANCHES[activeBranch];
   const activeBank = currentBranch.bank || BANK_ACCOUNT;
 
+  // HELPER: Formats "2026-10-19" into "Monday, 19th October 2026"
+  const formatScheduledDate = (dateStr) => {
+    if (!dateStr) return '';
+    
+    let dateObj;
+    // Safely parse YYYY-MM-DD in local time to prevent timezone day-shift bugs
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      dateObj = new Date(year, month - 1, day);
+    } else {
+      dateObj = new Date(dateStr);
+    }
+
+    if (isNaN(dateObj.getTime())) return dateStr;
+
+    const dayNum = dateObj.getDate();
+    const getOrdinalSuffix = (n) => {
+      if (n > 3 && n < 21) return 'th';
+      switch (n % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+
+    const weekday = dateObj.toLocaleDateString('en-GB', { weekday: 'long' });
+    const monthName = dateObj.toLocaleDateString('en-GB', { month: 'long' });
+    const yearNum = dateObj.getFullYear();
+
+    return `${weekday}, ${dayNum}${getOrdinalSuffix(dayNum)} ${monthName} ${yearNum}`;
+  };
+
   const calculateGpsDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -229,8 +262,12 @@ export default function CheckoutWizard({
       ctx.fillText(`Customer: ${customerName || 'Valued Customer'}`, 50, 235);
       ctx.fillText(`Phone: ${customerPhone || 'N/A'}`, 50, 260);
 
+      const formattedDate = orderSchedule.type === 'scheduled' && orderSchedule.date
+        ? formatScheduledDate(orderSchedule.date)
+        : '';
+
       const scheduleInfo = orderSchedule.type === 'scheduled' && orderSchedule.date
-        ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+        ? `Scheduled: ${formattedDate} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
         : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
       ctx.fillText(`Processing Kitchen: ${currentBranch.name}`, 420, 210);
@@ -330,8 +367,12 @@ export default function CheckoutWizard({
   const onWhatsAppSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
+    const formattedDate = orderSchedule.type === 'scheduled' && orderSchedule.date
+      ? formatScheduledDate(orderSchedule.date)
+      : '';
+
     const scheduleStr = orderSchedule.type === 'scheduled' && orderSchedule.date
-      ? `Scheduled: ${orderSchedule.date} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+      ? `Scheduled: ${formattedDate} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
       : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
     const itemsText = cart.map(item => `• ${item.name} x${item.quantity} (N${(item.price * item.quantity).toLocaleString()})`).join('\n');
@@ -343,11 +384,11 @@ export default function CheckoutWizard({
       `*Name:* ${customerName}\n` +
       `*Phone:* ${customerPhone}\n` +
       `*Processing Kitchen:* ${currentBranch.name}\n` +
-      `*Fulfillment:* ${deliveryMethod === 'pickup' ? 'Self Pickup' : `Delivery to: ${deliveryAddress}`}\n` +
+      `*Fulfillment:* ${deliveryMethod === 'pickup' ? 'Self Pickup' : `Delivery to: \${deliveryAddress}`}\n` +
       `*Timing:* ${scheduleStr}\n\n` +
       `*ITEMS:*\n${itemsText}\n\n` +
       `*Subtotal:* N${subtotalVal.toLocaleString()}\n` +
-      `*Fulfillment Fee:* ${deliveryMethod === 'pickup' ? 'FREE' : `N${currentDeliveryFee.toLocaleString()}`}\n` +
+      `*Fulfillment Fee:* ${deliveryMethod === 'pickup' ? 'FREE' : `N\${currentDeliveryFee.toLocaleString()}`}\n` +
       `*GRAND TOTAL:* N${totalVal.toLocaleString()}\n` +
       `------------------------------------\n` +
       `*Payment Account:* ${activeBank.bankName} - ${activeBank.accountNumber} (${activeBank.accountName})\n` +
@@ -424,7 +465,7 @@ export default function CheckoutWizard({
               </div>
               <div className="flex justify-between text-neutral-400">
                 <span>
-                  {deliveryMethod === 'pickup' ? 'Fulfillment:' : `Delivery Fee ${detectedKm ? `(${detectedKm}km)` : ''}:`}
+                  {deliveryMethod === 'pickup' ? 'Fulfillment:' : `Delivery Fee ${detectedKm ? `(\${detectedKm}km)` : ''}:`}
                 </span>
                 <span className={deliveryMethod === 'pickup' ? "text-emerald-400 font-bold" : (deliveryZone === 'outOfRange' ? "text-red-400 font-bold uppercase" : "text-orange-300 font-bold")}>
                   {deliveryMethod === 'pickup' ? "FREE (Self Pickup)" : (deliveryZone === 'outOfRange' ? "Out of Range" : `₦${currentDeliveryFee.toLocaleString()}`)}
