@@ -85,7 +85,7 @@ export default function CheckoutWizard({
     
     let dateObj;
     // Safely parse YYYY-MM-DD in local time to prevent timezone day-shift bugs
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    if (/^\d{4}-\d{2}-\d{2}\$/.test(dateStr)) {
       const [year, month, day] = dateStr.split('-').map(Number);
       dateObj = new Date(year, month - 1, day);
     } else {
@@ -267,7 +267,7 @@ export default function CheckoutWizard({
         : '';
 
       const scheduleInfo = orderSchedule.type === 'scheduled' && orderSchedule.date
-        ? `Scheduled: ${formattedDate} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+        ? 'Scheduled: ' + formattedDate + ' (' + (orderSchedule.time || '10:00 AM - 12:00 PM') + ')'
         : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
       ctx.fillText(`Processing Kitchen: ${currentBranch.name}`, 420, 210);
@@ -314,7 +314,7 @@ export default function CheckoutWizard({
       ctx.fillStyle = '#a3a3a3';
       ctx.fillText('Fulfillment Fee:', 480, currentY);
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(deliveryMethod === 'pickup' ? 'FREE' : `N${feeVal.toLocaleString()}`, 640, currentY);
+      ctx.fillText(deliveryMethod === 'pickup' ? 'FREE' : 'N' + feeVal.toLocaleString(), 640, currentY);
       currentY += 32;
       ctx.fillStyle = '#ea580c';
       ctx.fillRect(460, currentY - 20, 290, 40);
@@ -372,23 +372,27 @@ export default function CheckoutWizard({
       : '';
 
     const scheduleStr = orderSchedule.type === 'scheduled' && orderSchedule.date
-      ? `Scheduled: ${formattedDate} (${orderSchedule.time || '10:00 AM - 12:00 PM'})`
+      ? 'Scheduled: ' + formattedDate + ' (' + (orderSchedule.time || '10:00 AM - 12:00 PM') + ')'
       : 'ASAP Dispatch (Mon - Sun 10:00 AM - 5:00 PM)';
 
     const itemsText = cart.map(item => `• ${item.name} x${item.quantity} (N${(item.price * item.quantity).toLocaleString()})`).join('\n');
     const subtotalVal = typeof calculateSubtotal === 'function' ? calculateSubtotal() : 0;
     const totalVal = typeof calculateTotal === 'function' ? calculateTotal() : 0;
 
+    // Clean, non-nested variables so template literal escaping never breaks
+    const fulfillmentText = deliveryMethod === 'pickup' ? 'Self Pickup' : 'Delivery to: ' + deliveryAddress;
+    const feeText = deliveryMethod === 'pickup' ? 'FREE' : 'N' + currentDeliveryFee.toLocaleString();
+
     const msg = `*NEW ORDER - Supreme Chops International*\n` +
       `------------------------------------\n` +
       `*Name:* ${customerName}\n` +
       `*Phone:* ${customerPhone}\n` +
       `*Processing Kitchen:* ${currentBranch.name}\n` +
-      `*Fulfillment:* ${deliveryMethod === 'pickup' ? 'Self Pickup' : `Delivery to: \${deliveryAddress}`}\n` +
+      `*Fulfillment:* ${fulfillmentText}\n` +
       `*Timing:* ${scheduleStr}\n\n` +
       `*ITEMS:*\n${itemsText}\n\n` +
       `*Subtotal:* N${subtotalVal.toLocaleString()}\n` +
-      `*Fulfillment Fee:* ${deliveryMethod === 'pickup' ? 'FREE' : `N\${currentDeliveryFee.toLocaleString()}`}\n` +
+      `*Fulfillment Fee:* ${feeText}\n` +
       `*GRAND TOTAL:* N${totalVal.toLocaleString()}\n` +
       `------------------------------------\n` +
       `*Payment Account:* ${activeBank.bankName} - ${activeBank.accountNumber} (${activeBank.accountName})\n` +
@@ -400,6 +404,7 @@ export default function CheckoutWizard({
   };
 
   const totalItemCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const kmLabel = detectedKm ? ' (' + detectedKm + 'km)' : '';
 
   return (
     <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-neutral-950/80 backdrop-blur-md p-0 sm:p-4 animate-fade-in">
@@ -465,7 +470,7 @@ export default function CheckoutWizard({
               </div>
               <div className="flex justify-between text-neutral-400">
                 <span>
-                  {deliveryMethod === 'pickup' ? 'Fulfillment:' : `Delivery Fee ${detectedKm ? `(\${detectedKm}km)` : ''}:`}
+                  {deliveryMethod === 'pickup' ? 'Fulfillment:' : `Delivery Fee${kmLabel}:`}
                 </span>
                 <span className={deliveryMethod === 'pickup' ? "text-emerald-400 font-bold" : (deliveryZone === 'outOfRange' ? "text-red-400 font-bold uppercase" : "text-orange-300 font-bold")}>
                   {deliveryMethod === 'pickup' ? "FREE (Self Pickup)" : (deliveryZone === 'outOfRange' ? "Out of Range" : `₦${currentDeliveryFee.toLocaleString()}`)}
